@@ -1,7 +1,7 @@
 const http = require("http");
 require("dotenv").config();
 
-require("./config/db");
+require("./config/db.config");
 
 const express = require("express");
 const cookieParser = require("cookie-parser");
