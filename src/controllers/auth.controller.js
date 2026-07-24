@@ -1,299 +1,692 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import crypto from "crypto";
-import prisma from "../config/db.config.js";
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const emailService = require("../services/email.service")
+const prisma = require("../config/db.config.js");
 
-export const UserRegisterController = async (req, res) => {
+
+//UserregisterController
+
+async function UserRegisterController(req, res) {
     try {
 
-        const { name, email, password } = req.body;
+        const { email, password, name } = req.body;
 
-        
-        if (!name || !email || !password) {
-            return res.status(400).json({
-                message: "All fields are required"
-            });
-        }
+        // Check if user already exists
 
-      
-        const existingUser = await prisma.user.findUnique({
+        const isExists = await prisma.user.findUnique({
             where: {
-                email
+                email: email
             }
         });
 
-        if (existingUser) {
-            return res.status(409).json({
-                message: "Email already registered"
+        if (isExists) {
+            return res.status(422).json({
+                message: "User already exists with this email.",
+                status: "failed"
             });
         }
 
-       
+        // Hash Password
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
-       
+        // Create User
+
         const user = await prisma.user.create({
             data: {
-                name,
-                email,
-                password: hashedPassword
+                email: email,
+                password: hashedPassword,
+                name: name
             }
         });
 
-     
+        // Generate Access Token
+
         const token = jwt.sign(
             {
-                id: user.id,
-                email: user.email
+                userId: user.id
             },
             process.env.JWT_SECRET,
             {
-                expiresIn: "3d"
+                expiresIn: "15m"
             }
         );
 
-     
+        // Generate Refresh Token
+
+        const refreshToken = jwt.sign(
+            {
+                userId: user.id
+            },
+            process.env.JWT_REFRESH_SECRET,
+            {
+                expiresIn: "7d"
+            }
+        );
+
+        // Save Refresh Token in Database
+
+        await prisma.refreshToken.create({
+            data: {
+                token: refreshToken,
+                userId: user.id,
+                expiresAt: new Date(
+                    Date.now() + 7 * 24 * 60 * 60 * 1000
+                )
+            }
+        });
+
+        // Store Access Token in Cookie
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000
+        });
+
+        // Store Refresh Token in Cookie
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        // Send Registration Email
+
+        await emailService.sendRegistrationEmail(
+            user.email,
+            user.name
+        );
+
+        // Send Response
+
         return res.status(201).json({
             message: "User registered successfully",
-            token,
             user: {
                 id: user.id,
-                name: user.name,
-                email: user.email
+                email: user.email,
+                name: user.name
             }
         });
 
     } catch (error) {
+
         return res.status(500).json({
-            message: error.message
+            message: error.message,
+            status: "failed"
         });
+
     }
-};
+}
 
 
+//User Login Controller  
 
-
-//Login Controller
-
-
-export const UserLoginController = async (req, res) => {
+async function UserLoginController(req, res) {
     try {
 
         const { email, password } = req.body;
 
-    
-        if (!email || !password) {
-            return res.status(400).json({
-                message: "Email and Password are required"
-            });
-        }
+        // Find User
 
-       
         const user = await prisma.user.findUnique({
             where: {
-                email
+                email: email
             }
         });
 
         if (!user) {
             return res.status(401).json({
-                message: "Invalid Email or Password"
+                message: "Email or Password is Invalid",
+                status: "failed"
             });
         }
 
-      
-        const isMatch = await bcrypt.compare(
+        // Compare Password
+
+        const isValidPassword = await bcrypt.compare(
             password,
             user.password
         );
 
-        if (!isMatch) {
+        if (!isValidPassword) {
             return res.status(401).json({
-                message: "Invalid Email or Password"
+                message: "Email or Password is Invalid",
+                status: "failed"
             });
         }
 
-       
-        const accessToken = jwt.sign(
+        // Generate Access Token
+
+        const token = jwt.sign(
             {
-                id: user.id,
-                email: user.email
+                userId: user.id
             },
-            process.env.ACCESS_TOKEN_SECRET,
+            process.env.JWT_SECRET,
             {
-                expiresIn: process.env.ACCESS_TOKEN_EXPIRES
+                expiresIn: "15m"
             }
         );
 
-    
+        // Generate Refresh Token
+
         const refreshToken = jwt.sign(
             {
-                id: user.id
+                userId: user.id
             },
-            process.env.REFRESH_TOKEN_SECRET,
+            process.env.JWT_REFRESH_SECRET,
             {
-                expiresIn: process.env.REFRESH_TOKEN_EXPIRES
+                expiresIn: "7d"
             }
         );
 
-    
+        // Save Refresh Token in Database
+
+        await prisma.refreshToken.create({
+            data: {
+                token: refreshToken,
+                userId: user.id,
+                expiresAt: new Date(
+                    Date.now() + 7 * 24 * 60 * 60 * 1000
+                )
+            }
+        });
+
+        // Store Access Token in Cookie
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000
+        });
+
+        // Store Refresh Token in Cookie
+
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 Days
+            maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
+        // Send Response
+
         return res.status(200).json({
-            message: "Login Successful",
-            accessToken,
+            message: "Login successful",
             user: {
                 id: user.id,
-                name: user.name,
-                email: user.email
+                email: user.email,
+                name: user.name
             }
         });
 
     } catch (error) {
 
         return res.status(500).json({
-            message: error.message
+            message: error.message,
+            status: "failed"
         });
 
     }
-};
-
+}
 
 
 
 //Refreshtoken controller
 
-
-export const UserRefreshtokenController = async (req, res) => {
+async function RefreshtokenController(req, res) {
     try {
 
-        const { refreshToken } = req.cookies;
+        // Get refresh token from cookie
+
+        const refreshToken = req.cookies.refreshToken;
 
         if (!refreshToken) {
             return res.status(401).json({
-                message: "Refresh Token is required"
+                message: "Refresh token is required",
+                status: "failed"
             });
         }
 
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const decoded = jwt.verify(
+            refreshToken,
+            process.env.JWT_REFRESH_SECRET
+        );
 
-        const user = await prisma.user.findUnique({
+        const storedRefreshToken = await prisma.refreshToken.findFirst({
             where: {
-                id: decoded.id
+                token: refreshToken
             }
         });
 
-        if (!user) {
+
+        if (!storedRefreshToken) {
             return res.status(401).json({
-                message: "Invalid Refresh Token"
+                message: "Invalid refresh token",
+                status: "failed"
             });
         }
 
-        const accessToken = jwt.sign(
+
+        // Check refresh token expiry
+
+        if (storedRefreshToken.expiresAt < new Date()) {
+
+            // Delete expired refresh token
+
+            await prisma.refreshToken.delete({
+                where: {
+                    id: storedRefreshToken.id
+                }
+            });
+
+            return res.status(401).json({
+                message: "Refresh token has expired",
+                status: "failed"
+            });
+        }
+        // Find user
+
+        const user = await prisma.user.findUnique({
+            where: {
+                id: decoded.userId
+            }
+        });
+
+
+        if (!user) {
+            return res.status(401).json({
+                message: "User not found",
+                status: "failed"
+            });
+        }
+
+
+        // Generate new access token
+
+        const newAccessToken = jwt.sign(
             {
-                id: user.id,
-                email: user.email
+                userId: user.id
             },
-            process.env.ACCESS_TOKEN_SECRET,
+            process.env.JWT_SECRET,
             {
-                expiresIn: process.env.ACCESS_TOKEN_EXPIRES
+                expiresIn: "15m"
             }
         );
 
+
+        // Store new access token in cookie
+
+        res.cookie("token", newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000
+        });
+
+
+       
+
         return res.status(200).json({
-            message: "Access Token Refreshed Successfully",
-            accessToken
+            message: "Access token refreshed successfully",
+            token: newAccessToken
         });
 
     } catch (error) {
 
-        return res.status(500).json({
-            message: error.message
+        return res.status(401).json({
+            message: "Invalid or expired refresh token",
+            status: "failed"
         });
 
     }
-};
+}
 
 
 
+// Forgot Password Controller
 
-//Forget Password Controller
-
-
-export const ForgotPasswordController = async (req, res) => {
+async function ForgotPasswordController(req, res) {
     try {
 
         const { email } = req.body;
 
-        
         if (!email) {
             return res.status(400).json({
-                message: "Email is required"
+                message: "Email is required",
+                status: "failed"
             });
         }
 
-     
+        // Find User
+
         const user = await prisma.user.findUnique({
             where: {
-                email
+                email: email
             }
         });
 
         if (!user) {
             return res.status(404).json({
-                message: "User not found"
+                message: "User not found",
+                status: "failed"
             });
         }
 
-     
-        const resetToken = crypto.randomBytes(32).toString("hex");
 
-      
+        const resetToken = crypto
+            .randomBytes(32)
+            .toString("hex");
+
         const resetPasswordExpires = new Date(
             Date.now() + 15 * 60 * 1000
         );
 
-       
         await prisma.user.update({
             where: {
                 id: user.id
             },
             data: {
                 resetPasswordToken: resetToken,
-                resetPasswordExpires
+                resetPasswordExpires: resetPasswordExpires
+            }
+        });
+
+        // Send Reset Password Email
+
+        await emailService.sendPasswordResetEmail(
+            user.email,
+            resetToken
+        );
+
+        return res.status(200).json({
+            message: "Password reset link sent successfully",
+            status: "success"
+        });
+
+    } catch (error) {
+    console.error("FORGOT PASSWORD ERROR:", error);
+
+    return res.status(500).json({
+        message: error.message,
+        status: "failed"
+    });
+}
+}
+
+
+// Reset Password Controller
+
+async function ResetPasswordController(req, res) {
+    try {
+
+        const { resetToken, newPassword } = req.body;
+
+
+        // Check Required Fields
+
+        if (!resetToken || !newPassword) {
+            return res.status(400).json({
+                message: "Reset token and new password are required",
+                status: "failed"
+            });
+        }
+
+
+        // Find User Using Reset Token
+
+        const user = await prisma.user.findFirst({
+            where: {
+                resetPasswordToken: resetToken
             }
         });
 
 
+        if (!user) {
+            return res.status(400).json({
+                message: "Invalid reset token",
+                status: "failed"
+            });
+        }
+
+
+        // Check Reset Token Expiry
+
+        if (
+            !user.resetPasswordExpires ||
+            user.resetPasswordExpires < new Date()
+        ) {
+
+            return res.status(400).json({
+                message: "Reset token has expired",
+                status: "failed"
+            });
+        }
+
+
+        // Hash New Password
+
+        const hashedPassword = await bcrypt.hash(
+            newPassword,
+            10
+        );
+
+
+        // Update Password
+
+        await prisma.user.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                password: hashedPassword,
+
+                // Remove Reset Token After Password Reset
+
+                resetPasswordToken: null,
+                resetPasswordExpires: null
+            }
+        });
+
+
+        // Send Response
 
         return res.status(200).json({
-            message: "Password reset link sent successfully",
-            resetToken
+            message: "Password reset successfully",
+            status: "success"
         });
+
 
     } catch (error) {
 
         return res.status(500).json({
-            message: error.message
+            message: "Something went wrong",
+            status: "failed"
         });
 
     }
-};
+}
 
+// Email Verification Controller
 
-
-
-
-//Logout Controller
-export const UserLogoutController = async (req, res) => {
+async function EmailVerificationController(req, res) {
     try {
 
-       
+        const { email, verificationToken } = req.body;
+
+
+        // STEP 1: SEND VERIFICATION EMAIL
+
+        if (!verificationToken) {
+
+            // Check Email
+
+            if (!email) {
+                return res.status(400).json({
+                    message: "Email is required",
+                    status: "failed"
+                });
+            }
+
+            const user = await prisma.user.findUnique({
+                where: {
+                    email: email
+                }
+            });
+
+
+            if (!user) {
+                return res.status(404).json({
+                    message: "User not found",
+                    status: "failed"
+                });
+            }
+
+            if (user.emailVerified) {
+                return res.status(400).json({
+                    message: "Email is already verified",
+                    status: "failed"
+                });
+            }
+
+
+            // Generate Verification Token
+
+            const emailVerificationToken =
+                crypto.randomBytes(32).toString("hex");
+
+
+            // Token Expiry - 15 Minutes
+
+            const emailVerificationExpires = new Date(
+                Date.now() + 15 * 60 * 1000
+            );
+
+
+            // Save Token in Database
+
+            await prisma.user.update({
+                where: {
+                    id: user.id
+                },
+                data: {
+                    emailVerificationToken: emailVerificationToken,
+                    emailVerificationExpires: emailVerificationExpires
+                }
+            });
+
+            await emailService.sendVerificationEmail(
+                user.email,
+                user.name,
+                emailVerificationToken
+            );
+
+
+            return res.status(200).json({
+                message: "Verification email sent successfully",
+                status: "success"
+            });
+        }
+
+
+        // STEP 2: VERIFY EMAIL
+
+        const user = await prisma.user.findFirst({
+            where: {
+                emailVerificationToken: verificationToken
+            }
+        });
+
+
+        // Check Token
+
+        if (!user) {
+            return res.status(400).json({
+                message: "Invalid verification token",
+                status: "failed"
+            });
+        }
+
+        if (
+            !user.emailVerificationExpires ||
+            user.emailVerificationExpires < new Date()
+        ) {
+
+            return res.status(400).json({
+                message: "Verification token has expired",
+                status: "failed"
+            });
+        }
+
+
+        // Verify Email
+
+        await prisma.user.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                emailVerified: true,
+
+                emailVerificationToken: null,
+                emailVerificationExpires: null
+            }
+        });
+
+
+        return res.status(200).json({
+            message: "Email verified successfully",
+            status: "success"
+        });
+
+
+    } catch (error) {
+
+        return res.status(500).json({
+            message: "Something went wrong",
+            status: "failed"
+        });
+
+    }
+}
+
+
+// Logout Controller
+
+async function UserLogoutController(req, res) {
+    try {
+
+        // Get Refresh Token
+
+        const refreshToken = req.cookies.refreshToken;
+
+
+        // Delete Refresh Token from Database
+
+        if (refreshToken) {
+
+            await prisma.refreshToken.deleteMany({
+                where: {
+                    token: refreshToken
+                }
+            });
+
+        }
+
+
+        // Clear Access Token Cookie
+
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict"
+        });
+
         res.clearCookie("refreshToken", {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -301,14 +694,27 @@ export const UserLogoutController = async (req, res) => {
         });
 
         return res.status(200).json({
-            message: "Logout Successful"
+            message: "User logged out successfully",
+            status: "success"
         });
+
 
     } catch (error) {
 
         return res.status(500).json({
-            message: error.message
+            message: "Something went wrong",
+            status: "failed"
         });
 
     }
-};
+}
+
+ module.exports={
+        UserRegisterController,
+        UserLoginController,
+        RefreshtokenController,
+        ForgotPasswordController,
+        ResetPasswordController,
+        EmailVerificationController,
+        UserLogoutController
+ }
