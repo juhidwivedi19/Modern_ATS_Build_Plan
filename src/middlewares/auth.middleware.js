@@ -5,7 +5,7 @@ const jwt=require("jsonwebtoken")
 async function authMiddleware(req,res,next){
 
     try{
-     // Get access token from cookie or Authorization header
+   
        const token = 
        req.cookies.token ||
        req.headers.authorization?.split(" ")[1];
@@ -17,13 +17,13 @@ async function authMiddleware(req,res,next){
         });
        }
     
-       //verify jwt
+      
        const decoded= jwt.verify(
         token,
         process.env.JWT_SECRET
        );
 
-       //GET USERID FROM TOKEN
+     
        const userId = decoded.userId;
 
        if(!userId){
@@ -33,14 +33,14 @@ async function authMiddleware(req,res,next){
         });
        }
 
-       //now find user in postgresql using prisma
+     
        const user= await prisma.user.findUnique({
           where: {
             id:userId
           }
        });
 
-       //Now check if user exists
+   
        if(!user) {
         return res.status(401).json({
             message: "User not found",
