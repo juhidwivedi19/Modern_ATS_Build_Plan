@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({  //hum transporter ka use karte hai SMTP server se connect karne ke liye, isme service aur auth details pass karte hai
+const transporter = nodemailer.createTransport({  
   service: 'gmail',
   auth: {
     type: 'OAuth2',

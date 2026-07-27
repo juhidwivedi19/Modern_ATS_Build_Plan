@@ -1,2 +1,2 @@
-import prisma from "../config/db.config.js";
-
+const prisma =require("../config/db.config.js");
+const jwt=require("jsonwebtoken");
