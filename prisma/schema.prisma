@@ -12,37 +12,64 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 model User {
-  id  Int @id @default(autoincrement())
-  email String @unique
-  name  String
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  name     String
   password String
 
   resetPasswordToken   String?
   resetPasswordExpires DateTime?
 
+  emailVerified            Boolean   @default(false)
+  emailVerificationToken   String?
+  emailVerificationExpires DateTime?
 
-    emailVerified          Boolean  @default(false)
-    emailVerificationToken String?
-    emailVerificationExpires DateTime?
-
-     
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-    refreshTokens RefreshToken[]
-}   
+  refreshTokens RefreshToken[]
 
+  organizationMembers OrganizationMember[]
+}
 
 model RefreshToken {
-  id         Int      @id @default(autoincrement())
-  token      String
-  userId     Int
-  expiresAt  DateTime
+  id        Int      @id @default(autoincrement())
+  token     String
+  userId    Int
+  expiresAt DateTime
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
+}
+
+model Organization {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members OrganizationMember[]
+}
+
+model OrganizationMember {
+  id Int @id @default(autoincrement())
+
+  userId         Int
+  organizationId Int
+
+  role OrganizationRole @default(MEMBER)
+
+  createdAt DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+enum OrganizationRole {
+  OWNER
+  MEMBER
 }
