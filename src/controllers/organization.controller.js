@@ -5,10 +5,10 @@ async function createOrganizationController(req,res) {
      try{
     const {name} = req.body;
 
-    //GET LOGGED IN USER
+  
      const userId= req.user.userId;
 
-     //check organization name
+
      if(!name){
         return res.status(400).json({
             message:"Organization name is required",
@@ -16,7 +16,7 @@ async function createOrganizationController(req,res) {
         });
      }
 
-     //Create Organization
+  
 
      const organization = await prisma.organization.create({
         data:{
@@ -24,7 +24,7 @@ async function createOrganizationController(req,res) {
         }
      });
 
-     //create organization member
+
 
      await prisma.organizationMember.create({
         data:{
@@ -34,7 +34,7 @@ async function createOrganizationController(req,res) {
         }
      });
 
-     //Send response
+ 
 
      return res.status(201).json({
         message: "Organization created successfully",
