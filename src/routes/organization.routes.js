@@ -9,5 +9,15 @@ router.post(
     authMiddleware.authMiddleware,
     organizationController.createOrganizationController
 );
+router.post(
+    "/",
+    authMiddleware.authMiddleware,
+    organizationController.getMyOrganizationController
+);
+router.post(
+    "/",
+    authMiddleware.authMiddleware,
+    organizationController.getOrganizationDetailsController
+);
 
 module.exports = router;
