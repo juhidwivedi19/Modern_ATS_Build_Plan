@@ -6,7 +6,6 @@ async function createOrganizationController(req,res) {
     const {name} = req.body;
 
   
-     const userId= req.user.userId;
     //GET LOGGED IN USER
   const userId = req.user.id;
 
