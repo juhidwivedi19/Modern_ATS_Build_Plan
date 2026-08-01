@@ -58,6 +58,7 @@ model Organization {
   updatedAt DateTime @updatedAt
 
   members OrganizationMember[]
+   invitations Invitation[]
 }
 
 model OrganizationMember {
@@ -82,4 +83,18 @@ enum OrganizationRole {
   RECRUITER
   INTERVIEWER
   MEMBER
+}
+
+
+model Invitation{
+  id Int @id @default(autoincrement())
+  email String
+  organizationId Int
+  role OrganizationRole @default(MEMBER)
+  token String @unique
+  expiresAt DateTime
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }

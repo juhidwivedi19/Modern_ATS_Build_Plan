@@ -35,6 +35,7 @@ router.post(
         "OWNER",
         "ADMIN"
     ]),
+    organizationController.inviteMemberController
 );
 
 module.exports = router;

@@ -39,8 +39,34 @@ async function sendPasswordResetEmail(email, name, resetToken) {
     });
 }
 
+
+async function sendInvitationEmail(email, role, invitationLink) {
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Organization Invitation",
+        html: `
+            <h2>You have been invited!</h2>
+
+            <p>You have been invited to join an organization.</p>
+
+            <p>Your assigned role is: <strong>${role}</strong></p>
+
+            <p>Click the link below to accept the invitation:</p>
+
+            <a href="${invitationLink}">
+                Accept Invitation
+            </a>
+
+            <p>This invitation will expire in 24 hours.</p>
+        `
+    });
+}
+
 module.exports = {
     sendRegistrationEmail,
     sendVerificationEmail,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendInvitationEmail
 };
+
