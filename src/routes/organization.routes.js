@@ -38,4 +38,12 @@ router.post(
     organizationController.inviteMemberController
 );
 
+
+router.get(
+    "/accept-invitation",
+    authMiddleware.authMiddleware,
+    organizationController.acceptInvitationController
+);
+
+
 module.exports = router;
