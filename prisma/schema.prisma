@@ -78,5 +78,8 @@ model OrganizationMember {
 
 enum OrganizationRole {
   OWNER
+   ADMIN
+  RECRUITER
+  INTERVIEWER
   MEMBER
 }
