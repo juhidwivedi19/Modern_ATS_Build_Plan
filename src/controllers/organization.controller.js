@@ -5,8 +5,7 @@ async function createOrganizationController(req,res) {
      try{
     const {name} = req.body;
 
-  
-    //GET LOGGED IN USER
+ 
   const userId = req.user.id;
 
 
@@ -60,15 +59,14 @@ return res.status(201).json({
 
 
 
-//GET MY ORGANIZATION
+
 
 async function getMyOrganizationController(req,res){
      try{
-        //get logged in user
+      
         const userId=req.user.id;
 
-        // // Now find all organizations
-        // where this user is a member
+   
        const organizations = await prisma.organizationMember.findMany({
          where: {
         userId: userId
@@ -97,15 +95,13 @@ return res.status(200).json({
 
 
 
-// GET ORGANIZATION DETAILS
 
 async function getOrganizationDetailsController(req, res) {
     try {
 
-        // Get logged-in user
+      
         const userId = req.user.id;
 
-        // Get organization ID from URL
         const organizationId = parseInt(req.params.organizationId);
 
         if (!organizationId) {
@@ -115,7 +111,7 @@ async function getOrganizationDetailsController(req, res) {
             });
         }
 
-        // Check whether user belongs to this organization
+       
         const organizationMember = await prisma.organizationMember.findUnique({
             where: {
                 userId_organizationId: {
@@ -125,7 +121,7 @@ async function getOrganizationDetailsController(req, res) {
             }
         });
 
-        // User is not a member
+     
         if (!organizationMember) {
             return res.status(403).json({
                 message: "You are not a member of this organization",
@@ -133,14 +129,14 @@ async function getOrganizationDetailsController(req, res) {
             });
         }
 
-        // Find organization
+     
         const organization = await prisma.organization.findUnique({
             where: {
                 id: organizationId
             }
         });
 
-        // Organization not found
+     
         if (!organization) {
             return res.status(404).json({
                 message: "Organization not found",
@@ -148,7 +144,7 @@ async function getOrganizationDetailsController(req, res) {
             });
         }
 
-        // Send response
+     
         return res.status(200).json({
             message: "Organization details fetched successfully",
             status: "success",
