@@ -78,7 +78,7 @@ async function getMyOrganizationController(req,res){
     }
 });
 
-return res.status(201).json({
+return res.status(200).json({
     message:"Organization fetched successfully",
     status:"Success",
     Organizations: organizations
