@@ -10,7 +10,7 @@ function roleAuthorizationMiddleware(allowedRoles) {
                 });
             }
 
-            // Check if user's role is allowed
+         
             if (!allowedRoles.includes(organizationMember.role)) {
                 return res.status(403).json({
                     message: "Insufficient permissions",
