@@ -267,15 +267,12 @@ async function inviteMemberController(req,res){
 
 
 // ACCEPT INVITATION CONTROLLER
-
-// ACCEPT INVITATION CONTROLLER
-
 async function acceptInvitationController(req, res) {
     try {
-        // 1. Get invitation token from query parameter
+  
         const { token } = req.query;
 
-        // 2. Validate token
+
         if (!token) {
             return res.status(400).json({
                 message: "Invitation token is required",
@@ -283,14 +280,12 @@ async function acceptInvitationController(req, res) {
             });
         }
 
-        // 3. Find invitation by token
         const invitation = await prisma.invitation.findUnique({
             where: {
                 token: token
             }
         });
 
-        // 4. Check if invitation exists
         if (!invitation) {
             return res.status(404).json({
                 message: "Invitation not found",
@@ -298,7 +293,6 @@ async function acceptInvitationController(req, res) {
             });
         }
 
-        // 5. Check if invitation has expired
         if (invitation.expiresAt < new Date()) {
             return res.status(400).json({
                 message: "Invitation has expired",
@@ -306,17 +300,14 @@ async function acceptInvitationController(req, res) {
             });
         }
 
-        // 6. Get logged-in user
         const userId = req.user.id;
 
-        // 7. Find logged-in user
         const user = await prisma.user.findUnique({
             where: {
                 id: userId
             }
         });
 
-        // 8. Check if user exists
         if (!user) {
             return res.status(404).json({
                 message: "User not found",
@@ -324,7 +315,6 @@ async function acceptInvitationController(req, res) {
             });
         }
 
-        // 9. Verify user's email matches invitation email
         if (user.email !== invitation.email) {
             return res.status(403).json({
                 message: "This invitation was sent to a different email address",
@@ -332,7 +322,6 @@ async function acceptInvitationController(req, res) {
             });
         }
 
-        // 10. Check if user is already a member
         const existingMember = await prisma.organizationMember.findUnique({
             where: {
                 userId_organizationId: {
@@ -349,8 +338,6 @@ async function acceptInvitationController(req, res) {
             });
         }
 
-        // 11. Create organization member
-        // 12. Delete invitation
         const result = await prisma.$transaction(async (tx) => {
 
             const organizationMember =
@@ -371,7 +358,6 @@ async function acceptInvitationController(req, res) {
             return organizationMember;
         });
 
-        // 13. Return success response
         return res.status(200).json({
             message: "Invitation accepted successfully",
             status: "success",
