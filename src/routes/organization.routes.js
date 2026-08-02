@@ -46,4 +46,51 @@ router.get(
 );
 
 
+router.post(
+    "/:organizationId/departments",
+    authMiddleware.authMiddleware,
+    organizationAuthorizationMiddleware.organizationAuthorizationMiddleware,
+    roleAuthorizationMiddleware.roleAuthorizationMiddleware([  //only owner and admin has permission to create department
+        "OWNER",
+        "ADMIN"
+    ]),
+    organizationController.createDepartmentController
+);
+
+router.get(
+    "/:organizationId/departments",
+    authMiddleware.authMiddleware,
+    organizationAuthorizationMiddleware.organizationAuthorizationMiddleware,
+    organizationController.getDepartmentsController
+);
+
+router.get(
+    "/:organizationId/departments/:departmentId",
+    authMiddleware.authMiddleware,
+    organizationAuthorizationMiddleware.organizationAuthorizationMiddleware,
+    organizationController.getDepartmentController
+);
+
+router.put(
+    "/:organizationId/departments/:departmentId",
+    authMiddleware.authMiddleware,
+    organizationAuthorizationMiddleware.organizationAuthorizationMiddleware,
+    roleAuthorizationMiddleware.roleAuthorizationMiddleware([
+        "OWNER",
+        "ADMIN"
+    ]),
+    organizationController.updateDepartmentController
+);
+
+router.delete(
+    "/:organizationId/departments/:departmentId",
+    authMiddleware.authMiddleware,
+    organizationAuthorizationMiddleware.organizationAuthorizationMiddleware,
+    roleAuthorizationMiddleware.roleAuthorizationMiddleware([
+        "OWNER",
+        "ADMIN"
+    ]),
+    organizationController.deleteDepartmentController
+);
+
 module.exports = router;

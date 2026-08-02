@@ -31,6 +31,8 @@ model User {
   refreshTokens RefreshToken[]
 
   organizationMembers OrganizationMember[]
+
+  //jobs Job[]
 }
 
 model RefreshToken {
@@ -45,20 +47,22 @@ model RefreshToken {
 }
 
 model Organization {
-  id        Int      @id @default(autoincrement())
-  name      String?
-    description String?
+  id          Int     @id @default(autoincrement())
+  name        String?
+  description String?
   location    String?
   website     String?
   industry    String?
   companySize String?
   logo        String?
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members OrganizationMember[]
-   invitations Invitation[]
+  members     OrganizationMember[]
+  invitations Invitation[]
+  departments Department[]
+  //  jobs Job[]
 }
 
 model OrganizationMember {
@@ -79,22 +83,61 @@ model OrganizationMember {
 
 enum OrganizationRole {
   OWNER
-   ADMIN
+  ADMIN
   RECRUITER
   INTERVIEWER
   MEMBER
 }
 
-
-model Invitation{
-  id Int @id @default(autoincrement())
-  email String
+model Invitation {
+  id             Int              @id @default(autoincrement())
+  email          String
   organizationId Int
-  role OrganizationRole @default(MEMBER)
-  token String @unique
-  expiresAt DateTime
+  role           OrganizationRole @default(MEMBER)
+  token          String           @unique
+  expiresAt      DateTime
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 }
+
+model Department {
+  id             Int    @id @default(autoincrement())
+  name           String
+  organizationId Int
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, organizationId])
+}
+
+/**
+ * model Job {
+ * id             Int       @id @default(autoincrement())
+ * title          String
+ * description    String
+ * location       String
+ * salary         Float?
+ * employmentType String
+ * requiredSkills String?
+ * experience     Int?
+ * status         JobStatus @default(DRAFT)
+ * organizationId Int
+ * departmentId   Int
+ * createdById    Int
+ * organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+ * department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+ * createdBy    User         @relation(fields: [createdById], references: [id], onDelete: Restrict)
+ * createdAt DateTime @default(now())
+ * updatedAt DateTime @updatedAt
+ * }
+ * enum JobStatus {
+ * DRAFT
+ * PUBLISHED
+ * ARCHIVED
+ * }
+ */
