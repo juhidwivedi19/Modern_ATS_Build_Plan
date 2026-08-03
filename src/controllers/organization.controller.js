@@ -273,29 +273,32 @@ async function acceptInvitationController(req, res) {
                 status: "failed"
             });
         }
-
+         //  Find invitation by token
         const invitation = await prisma.invitation.findUnique({
             where: {
                 token: token
             }
         });
-
+       
         if (!invitation) {
             return res.status(404).json({
                 message: "Invitation not found",
                 status: "failed"
             });
         }
-
+      
+        // 5. Check if invitation has expired
         if (invitation.expiresAt < new Date()) {
             return res.status(400).json({
                 message: "Invitation has expired",
                 status: "failed"
             });
         }
-
+        
+        // 6. Get logged-in user's ID
         const userId = req.user.id;
-
+      
+        //find user by id
         const user = await prisma.user.findUnique({
             where: {
                 id: userId
@@ -315,6 +318,8 @@ async function acceptInvitationController(req, res) {
                 status: "failed"
             });
         }
+         
+        // 10. Check if user is already a member
 
         const existingMember = await prisma.organizationMember.findUnique({
             where: {
@@ -325,15 +330,16 @@ async function acceptInvitationController(req, res) {
             }
         });
 
+       // 11. Prevent duplicate organization membership
         if (existingMember) {
             return res.status(400).json({
                 message: "You are already a member of this organization",
                 status: "failed"
             });
         }
-
+        // 12. Add user to organization and delete invitation
         const result = await prisma.$transaction(async (tx) => {
-
+         // 13. Create organization member
             const organizationMember =
                 await tx.organizationMember.create({
                     data: {
@@ -343,6 +349,7 @@ async function acceptInvitationController(req, res) {
                     }
                 });
 
+       // 14. Delete invitation after accepting
             await tx.invitation.delete({
                 where: {
                     id: invitation.id
@@ -628,11 +635,257 @@ async function getDepartmentController(req, res) {
     }
   }
 
+  // 10  COMPLETE RBAC ROLE BASED ACCESS CONTROL IMPLEMENTATION FOR ORGANIZATION MEMBERSHIP MANAGEMENT
+      //1 Get Organization Members Controller
+async function getOrganizationMembersController(req, res) {
+    try {
+        const organizationId = parseInt(req.params.organizationId);
+
+        // Validate organization ID
+        if (!organizationId) {
+            return res.status(400).json({
+                message: "Organization ID is required",
+                status: "failed"
+            });
+        }
+
+        // Find all members of the organization
+        const members = await prisma.organizationMember.findMany({
+            where: {
+                organizationId: organizationId
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        // Check if organization has no members
+        if (members.length === 0) {
+            return res.status(404).json({
+                message: "No members found in this organization",
+                status: "failed"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Organization members fetched successfully",
+            status: "success",
+            members: members
+        });
+
+    } catch (error) {
+        console.error("Error fetching organization members:", error);
+
+        return res.status(500).json({
+            message: "Internal server error",
+            status: "failed"
+        });
+    }
+}
+
+
+//2 Update Member Role Controller
+async function updateMemberRoleController(req, res) {
+    try {
+        const organizationId = parseInt(req.params.organizationId);
+        const userId = parseInt(req.params.userId);
+
+        const { role } = req.body;
+
+        // Validate IDs and role
+        if (!organizationId || !userId || !role) {
+            return res.status(400).json({
+                message: "Organization ID, User ID and role are required",
+                status: "failed"
+            });
+        }
+
+        // Valid roles
+        const validRoles = [
+            "OWNER",
+            "ADMIN",
+            "RECRUITER",
+            "INTERVIEWER",
+            "MEMBER"
+        ];
+
+        if (!validRoles.includes(role)) {
+            return res.status(400).json({
+                message: "Invalid role",
+                status: "failed"
+            });
+        }
+
+        // Get the member whose role is being changed
+        const member = await prisma.organizationMember.findUnique({
+            where: {
+                userId_organizationId: {
+                    userId: userId,
+                    organizationId: organizationId
+                }
+            }
+        });
+
+        if (!member) {
+            return res.status(404).json({
+                message: "Member not found in this organization",
+                status: "failed"
+            });
+        }
+
+        // Get the currently logged-in user's membership
+        const currentUserId = req.user.id;
+
+        const currentUserMember =
+            await prisma.organizationMember.findUnique({
+                where: {
+                    userId_organizationId: {
+                        userId: currentUserId,
+                        organizationId: organizationId
+                    }
+                }
+            });
+
+        if (!currentUserMember) {
+            return res.status(403).json({
+                message: "You are not a member of this organization",
+                status: "failed"
+            });
+        }
+
+        // ADMIN cannot change OWNER's role
+        if (
+            currentUserMember.role === "ADMIN" &&
+            member.role === "OWNER"
+        ) {
+            return res.status(403).json({
+                message: "ADMIN cannot change the OWNER's role",
+                status: "failed"
+            });
+        }
+
+        // ADMIN cannot promote anyone to OWNER
+        if (
+            currentUserMember.role === "ADMIN" &&
+            role === "OWNER"
+        ) {
+            return res.status(403).json({
+                message: "Only OWNER can assign the OWNER role",
+                status: "failed"
+            });
+        }
+
+        // Update role
+        const updatedMember = await prisma.organizationMember.update({
+            where: {
+                userId_organizationId: {
+                    userId: userId,
+                    organizationId: organizationId
+                }
+            },
+            data: {
+                role: role
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        return res.status(200).json({
+            message: "Member role updated successfully",
+            status: "success",
+            member: updatedMember
+        });
+
+    } catch (error) {
+        console.error("Error updating member role:", error);
+
+        return res.status(500).json({
+            message: "Internal server error",
+            status: "failed"
+        });
+    }
+}
 
 
 
+// 3: Remove Organization Member Controller
+async function removeOrganizationMemberController(req, res) {
+    try {
+        const organizationId = parseInt(req.params.organizationId);
+        const userId = parseInt(req.params.userId);
 
+        // Validate IDs
+        if (!organizationId || !userId) {
+            return res.status(400).json({
+                message: "Organization ID and User ID are required",
+                status: "failed"
+            });
+        }
 
+        // Find the member in the organization
+        const member = await prisma.organizationMember.findUnique({
+            where: {
+                userId_organizationId: {
+                    userId: userId,
+                    organizationId: organizationId
+                }
+            }
+        });
+
+        // Check if member exists
+        if (!member) {
+            return res.status(404).json({
+                message: "Member not found in this organization",
+                status: "failed"
+            });
+        }
+
+        // Prevent removing the OWNER
+        if (member.role === "OWNER") {
+            return res.status(403).json({
+                message: "Organization OWNER cannot be removed",
+                status: "failed"
+            });
+        }
+
+        // Delete the member from organization
+        const deletedMember = await prisma.organizationMember.delete({
+            where: {
+                userId_organizationId: {
+                    userId: userId,
+                    organizationId: organizationId
+                }
+            }
+        });
+
+        return res.status(200).json({
+            message: "Member removed successfully",
+            status: "success",
+            member: deletedMember
+        });
+
+    } catch (error) {
+        console.error("Error removing organization member:", error);
+
+        return res.status(500).json({
+            message: "Internal server error",
+            status: "failed"
+        });
+    }
+}
 module.exports={
     createOrganizationController,
     getMyOrganizationController,
@@ -643,5 +896,8 @@ module.exports={
     getDepartmentsController,
     getDepartmentController,
     updateDepartmentController,
-    deleteDepartmentController
+    deleteDepartmentController,
+    getOrganizationMembersController,
+    updateMemberRoleController,
+    removeOrganizationMemberController
 }

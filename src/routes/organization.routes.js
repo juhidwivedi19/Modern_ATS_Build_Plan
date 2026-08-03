@@ -93,4 +93,34 @@ router.delete(
     organizationController.deleteDepartmentController
 );
 
+
+router.get(
+    "/:organizationId/members",
+    authMiddleware.authMiddleware,
+    organizationAuthorizationMiddleware.organizationAuthorizationMiddleware,
+    organizationController.getOrganizationMembersController
+);
+
+router.patch(
+    "/:organizationId/members/:userId/role",
+    authMiddleware.authMiddleware,
+    organizationAuthorizationMiddleware.organizationAuthorizationMiddleware,
+    roleAuthorizationMiddleware.roleAuthorizationMiddleware([
+        "OWNER",
+        "ADMIN"
+    ]),
+    organizationController.updateMemberRoleController
+);
+
+
+router.delete(
+    "/:organizationId/members/:userId",
+    authMiddleware.authMiddleware,
+    organizationAuthorizationMiddleware.organizationAuthorizationMiddleware,
+    roleAuthorizationMiddleware.roleAuthorizationMiddleware([
+        "OWNER",
+        "ADMIN"
+    ]),
+    organizationController.removeOrganizationMemberController
+);
 module.exports = router;

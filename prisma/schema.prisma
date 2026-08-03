@@ -115,6 +115,30 @@ model Department {
   @@unique([name, organizationId])
 }
 
+enum Permission {
+  ORGANIZATION_VIEW
+  ORGANIZATION_UPDATE
+  ORGANIZATION_DELETE
+
+  MEMBER_VIEW
+  MEMBER_INVITE
+  MEMBER_REMOVE
+  MEMBER_ROLE_UPDATE
+
+  DEPARTMENT_VIEW
+  DEPARTMENT_CREATE
+  DEPARTMENT_UPDATE
+  DEPARTMENT_DELETE
+}
+
+model RolePermission {
+  id         Int              @id @default(autoincrement())
+  role       OrganizationRole
+  permission Permission
+
+  @@unique([role, permission])
+}
+
 /**
  * model Job {
  * id             Int       @id @default(autoincrement())
