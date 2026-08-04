@@ -886,6 +886,11 @@ async function removeOrganizationMemberController(req, res) {
         });
     }
 }
+
+
+
+      
+        
 module.exports={
     createOrganizationController,
     getMyOrganizationController,
