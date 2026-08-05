@@ -32,7 +32,7 @@ model User {
 
   organizationMembers OrganizationMember[]
 
-  //jobs Job[]
+  jobs Job[]
 }
 
 model RefreshToken {
@@ -62,7 +62,7 @@ model Organization {
   members     OrganizationMember[]
   invitations Invitation[]
   departments Department[]
-  //  jobs Job[]
+  jobs        Job[]
 }
 
 model OrganizationMember {
@@ -112,6 +112,8 @@ model Department {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  jobs Job[]
+
   @@unique([name, organizationId])
 }
 
@@ -139,29 +141,28 @@ model RolePermission {
   @@unique([role, permission])
 }
 
-/**
- * model Job {
- * id             Int       @id @default(autoincrement())
- * title          String
- * description    String
- * location       String
- * salary         Float?
- * employmentType String
- * requiredSkills String?
- * experience     Int?
- * status         JobStatus @default(DRAFT)
- * organizationId Int
- * departmentId   Int
- * createdById    Int
- * organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
- * department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
- * createdBy    User         @relation(fields: [createdById], references: [id], onDelete: Restrict)
- * createdAt DateTime @default(now())
- * updatedAt DateTime @updatedAt
- * }
- * enum JobStatus {
- * DRAFT
- * PUBLISHED
- * ARCHIVED
- * }
- */
+model Job {
+  id             Int          @id @default(autoincrement())
+  title          String
+  description    String
+  location       String
+  salary         Float?
+  employmentType String
+  requiredSkills String?
+  experience     Int?
+  status         JobStatus    @default(DRAFT)
+  organizationId Int
+  departmentId   Int
+  createdById    Int
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department     Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdBy      User         @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
