@@ -17,7 +17,12 @@ async function main() {
             "DEPARTMENT_VIEW",
             "DEPARTMENT_CREATE",
             "DEPARTMENT_UPDATE",
-            "DEPARTMENT_DELETE"
+            "DEPARTMENT_DELETE",
+            "JOB_VIEW",
+           "JOB_CREATE",
+           "JOB_UPDATE",
+          "JOB_PUBLISH",
+          "JOB_ARCHIVE"
         ],
 
         ADMIN: [
@@ -32,25 +37,37 @@ async function main() {
             "DEPARTMENT_VIEW",
             "DEPARTMENT_CREATE",
             "DEPARTMENT_UPDATE",
-            "DEPARTMENT_DELETE"
+            "DEPARTMENT_DELETE",
+                 "JOB_VIEW",
+           "JOB_CREATE",
+           "JOB_UPDATE",
+           "JOB_PUBLISH",
+          "JOB_ARCHIVE"
         ],
 
         RECRUITER: [
             "ORGANIZATION_VIEW",
             "MEMBER_VIEW",
-            "DEPARTMENT_VIEW"
+            "DEPARTMENT_VIEW",
+"JOB_VIEW",
+"JOB_CREATE",
+"JOB_UPDATE",
+"JOB_PUBLISH",
+"JOB_ARCHIVE"
         ],
 
         INTERVIEWER: [
             "ORGANIZATION_VIEW",
             "MEMBER_VIEW",
-            "DEPARTMENT_VIEW"
+            "DEPARTMENT_VIEW",
+           "JOB_VIEW"
         ],
 
         MEMBER: [
             "ORGANIZATION_VIEW",
             "MEMBER_VIEW",
-            "DEPARTMENT_VIEW"
+            "DEPARTMENT_VIEW",
+            "JOB_VIEW"
         ]
     };
 

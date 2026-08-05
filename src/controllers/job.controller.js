@@ -400,10 +400,89 @@ async function updateJobController(req,res){
 
  }
 
+
+ //5:ARCHIVE job controller
+ async function archiveJobController(req,res){
+     try{
+        const organizationId = parseInt(req.params.organizationId)
+        const jobId = parseInt(req.params.jobId)
+
+        //VALIDATE ids
+        if(!organizationId || !jobId){
+            return res.status(400).json({
+                message:"organization and job ID's are required",
+                status:"failed"
+            })
+        }
+
+        // Find job belonging to this organization
+         const job = await prisma.job.findFirst({
+         where: {
+            id: jobId,
+            organizationId: organizationId
+               }
+          });
+
+      // Check if job exists
+      if (!job) {
+         return res.status(404).json({
+         message: "Job not found in this organization",
+         status: "failed"
+         });
+       }
+
+     // Check if already archived
+      if (job.status === "ARCHIVED") {
+          return res.status(400).json({
+          message: "Job is already archived",
+          status: "failed"
+           });
+        }
+
+    // Archive job
+    const archivedJob = await prisma.job.update({
+    where: {
+        id: jobId
+    },
+    data: {
+        status: "ARCHIVED"
+    },
+    include: {
+        department: true,
+        createdBy: {
+            select: {
+                id: true,
+                name: true,
+                email: true
+            }
+        }
+    }
+   });
+
+     return res.status(200).json({
+        message: "Job archived successfully",
+        status: "success",
+        job: archivedJob
+});
+     }catch(error){
+        console.error("",error)
+        return res.status(500).json({
+            message:"Internal server error",
+            status:"Failed"
+        })
+     }
+ }
+
+
+ //6"
+
+
+
 module.exports={
     createJobController,
     getJobsController,
     getJobController,
     updateJobController,
-    publishJobController
+    publishJobController,
+    archiveJobController
 }

@@ -131,7 +131,14 @@ enum Permission {
   DEPARTMENT_CREATE
   DEPARTMENT_UPDATE
   DEPARTMENT_DELETE
+
+  JOB_VIEW
+  JOB_CREATE
+  JOB_UPDATE
+  JOB_PUBLISH
+  JOB_ARCHIVE
 }
+
 
 model RolePermission {
   id         Int              @id @default(autoincrement())
@@ -165,4 +172,5 @@ enum JobStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+ 
 }
