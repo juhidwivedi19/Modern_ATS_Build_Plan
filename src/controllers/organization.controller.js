@@ -4,62 +4,87 @@ const crypto = require ("crypto");
 const   sendInvitationEmail = require("../services/email.service");
 
 //1.CREATE ORGANIZATION CONTROLLER
-async function createOrganizationController(req,res) {
-     try{
-    const {name} = req.body;
+// Create Organization Controller
+async function createOrganizationController(req, res) {
+    try {
+        const { name } = req.body;
+        const userId = req.user.id;
 
- 
-  const userId = req.user.id;
+        // Validate organization name
+        if (!name) {
+            return res.status(400).json({
+                message: "Organization name is required",
+                status: "failed"
+            });
+        }
 
+        // Generate base slug
+        const slug = name
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-");
 
-     if(!name){
-        return res.status(400).json({
-            message:"Organization name is required",
-            status: "failed"
+        // Generate unique slug
+        let uniqueSlug = slug;
+        let counter = 1;
+
+        while (
+            await prisma.organization.findUnique({
+                where: {
+                    slug: uniqueSlug
+                }
+            })
+        ) {
+            uniqueSlug = `${slug}-${counter}`;
+            counter++;
+        }
+
+        // Transaction
+        const result = await prisma.$transaction(async (tx) => {
+
+            // Create organization
+            const organization = await tx.organization.create({
+                data: {
+                    name,
+                    slug: uniqueSlug
+                }
+            });
+
+            // Add creator as OWNER
+            const organizationMember = await tx.organizationMember.create({
+                data: {
+                    userId,
+                    organizationId: organization.id,
+                    role: "OWNER"
+                }
+            });
+
+            return {
+                organization,
+                organizationMember
+            };
         });
-     }
 
-  const result = await prisma.$transaction(async (tx) => {
+        return res.status(201).json({
+            message: "Organization created successfully",
+            status: "success",
+            organization: {
+                id: result.organization.id,
+                name: result.organization.name,
+                slug: result.organization.slug
+            }
+        });
 
-    const organization = await tx.organization.create({
-        data: {
-            name: name
-        }
-    });
+    } catch (error) {
+        console.error("Error creating organization:", error);
 
-    const organizationMember = await tx.organizationMember.create({
-        data: {
-            userId: userId,
-            organizationId: organization.id,
-            role: "OWNER"
-        }
-    });
-
-    return {
-        organization,
-        organizationMember
-    };
-});
-
-
-return res.status(201).json({
-    message: "Organization created successfully",
-    status: "success",
-    organization: {
-        id: result.organization.id,
-        name: result.organization.name
-    }
-});
-   
-
-     }catch(error){
         return res.status(500).json({
-            message: error.message,
+            message: "Internal server error",
             status: "failed"
         });
-     }
+    }
 }
-
 
 
 
