@@ -49,6 +49,7 @@ model Organization {
   invitations Invitation[]
   jobs        Job[]
   members     OrganizationMember[]
+
 }
 
 model OrganizationMember {
@@ -112,6 +113,8 @@ model Job {
   createdBy      User         @relation(fields: [createdById], references: [id])
   department     Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  applications Application[]
 }
 
 enum OrganizationRole {
@@ -145,4 +148,55 @@ enum JobStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+
+model Candidate{
+ id Int    @id @default(autoincrement())
+ name String
+ email String @unique
+ phone String
+
+location String?
+education String?
+linkedin  String?
+portfolio  String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+  resumes      Resume[]
+  applications Application[]
+}
+
+model Resume{
+  id Int @id @default(autoincrement())
+candidateId Int
+fileName String?
+fileKey String? @unique
+fileType String
+fileSize Int
+uploadedAt DateTime @default(now())
+
+  candidate     Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  applications  Application[]
+}
+
+model Application {
+  id           Int      @id @default(autoincrement())
+
+  candidateId  Int
+  jobId        Int
+  resumeId     Int
+
+  coverLetter  String?
+
+  appliedAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  candidate    Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume       Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, jobId])
 }
