@@ -7,6 +7,10 @@ const {
 } = require("../controllers/Candidate.controller.js");
 
 // Update candidate profile
-router.patch("/candidates/:candidateId", updateController);
+router.put(
+    "/:candidateId",
+    authMiddleware,
+    updateCandidateController
+);
 
 module.exports = router;

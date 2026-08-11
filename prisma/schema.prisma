@@ -22,6 +22,7 @@ model User {
   jobs                     Job[]
   organizationMembers      OrganizationMember[]
   refreshTokens            RefreshToken[]
+  candidate Candidate?
 }
 
 model RefreshToken {
@@ -167,13 +168,16 @@ updatedAt DateTime @updatedAt
 
   resumes      Resume[]
   applications Application[]
+
+  userId Int @unique
+user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Resume{
   id Int @id @default(autoincrement())
 candidateId Int
 fileName String?
-fileKey String? @unique
+fileKey String @unique
 fileType String
 fileSize Int
 uploadedAt DateTime @default(now())
