@@ -8,21 +8,22 @@ datasource db {
 }
 
 model User {
-  id                       Int                  @id @default(autoincrement())
-  email                    String               @unique
+  id                       Int       @id @default(autoincrement())
+  email                    String    @unique
   name                     String
   password                 String
-  created_at               DateTime             @default(now())
-  updated_at               DateTime             @updatedAt
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @updatedAt
   emailVerificationExpires DateTime?
   emailVerificationToken   String?
-  emailVerified            Boolean              @default(false)
+  emailVerified            Boolean   @default(false)
   resetPasswordExpires     DateTime?
   resetPasswordToken       String?
-  jobs                     Job[]
-  organizationMembers      OrganizationMember[]
-  refreshTokens            RefreshToken[]
-  candidate Candidate?
+
+  jobs                Job[]
+  organizationMembers OrganizationMember[]
+  refreshTokens       RefreshToken[]
+  candidate           Candidate?
 }
 
 model RefreshToken {
@@ -31,14 +32,15 @@ model RefreshToken {
   userId     Int
   expiresAt  DateTime
   created_at DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Organization {
-  id          Int                  @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String?
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   companySize String?
   description String?
   industry    String?
@@ -46,11 +48,11 @@ model Organization {
   logo        String?
   website     String?
   slug        String   @unique
+
   departments Department[]
   invitations Invitation[]
   jobs        Job[]
   members     OrganizationMember[]
-
 }
 
 model OrganizationMember {
@@ -59,8 +61,9 @@ model OrganizationMember {
   organizationId Int
   role           OrganizationRole @default(MEMBER)
   createdAt      DateTime         @default(now())
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, organizationId])
 }
@@ -73,17 +76,19 @@ model Invitation {
   token          String           @unique
   expiresAt      DateTime
   createdAt      DateTime         @default(now())
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
 
 model Department {
-  id             Int          @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   name           String
   organizationId Int
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  jobs           Job[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  jobs         Job[]
 
   @@unique([name, organizationId])
 }
@@ -97,7 +102,7 @@ model RolePermission {
 }
 
 model Job {
-  id             Int          @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   title          String
   description    String
   location       String
@@ -105,15 +110,18 @@ model Job {
   employmentType String
   requiredSkills String?
   experience     Int?
-  status         JobStatus    @default(DRAFT)
+  status         JobStatus @default(DRAFT)
+
   organizationId Int
   departmentId   Int
   createdById    Int
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  createdBy      User         @relation(fields: [createdById], references: [id])
-  department     Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy    User         @relation(fields: [createdById], references: [id])
+  department   Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   applications Application[]
 }
@@ -151,56 +159,62 @@ enum JobStatus {
   ARCHIVED
 }
 
+model Candidate {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String
+  location  String?
+  education String?
+  linkedin  String?
+  portfolio String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-model Candidate{
- id Int    @id @default(autoincrement())
- name String
- email String @unique
- phone String
-
-location String?
-education String?
-linkedin  String?
-portfolio  String?
-
-createdAt DateTime @default(now())
-updatedAt DateTime @updatedAt
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   resumes      Resume[]
   applications Application[]
-
-  userId Int @unique
-user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model Resume{
-  id Int @id @default(autoincrement())
-candidateId Int
-fileName String?
-fileKey String @unique
-fileType String
-fileSize Int
-uploadedAt DateTime @default(now())
+model Resume {
+  id          Int      @id @default(autoincrement())
+  candidateId Int
+  fileName    String?
+  fileKey     String   @unique
+  fileType    String
+  fileSize    Int
+  uploadedAt  DateTime @default(now())
 
-  candidate     Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  applications  Application[]
+  candidate    Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  applications Application[]
 }
 
 model Application {
-  id           Int      @id @default(autoincrement())
+  id          Int               @id @default(autoincrement())
+  candidateId Int
+  jobId       Int
+  resumeId    Int
+  coverLetter String?
+  status      ApplicationStatus @default(SUBMITTED)
+  appliedAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
-  candidateId  Int
-  jobId        Int
-  resumeId     Int
-
-  coverLetter  String?
-
-  appliedAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  candidate    Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  resume       Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume    Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
   @@unique([candidateId, jobId])
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  SHORTLISTED
+  INTERVIEW
+  OFFER
+  HIRED
+  REJECTED
+  WITHDRAWN
 }

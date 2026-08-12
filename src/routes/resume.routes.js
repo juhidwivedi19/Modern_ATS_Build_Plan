@@ -3,11 +3,12 @@ const express = require("express");
 const  {uploadMiddleware} = require("../middlewares/upload.middleware");
 const {authMiddleware} = require("../middlewares/auth.middleware");
 
-    const {
+   const {
     uploadResume,
     getCandidateResume,
-        deleteResume}
- = require("../controllers/resume.controller.js");
+    deleteResume,
+    getResumeDownloadUrl
+} = require("../controllers/resume.controller.js");
 
 const router = express.Router();
 
@@ -31,6 +32,12 @@ router.delete(
     "/resumes/:resumeId",
     authMiddleware,
     deleteResume
+);
+
+router.get(
+    "/resumes/:resumeId/download",
+    authMiddleware,
+    getResumeDownloadUrl
 );
 
 
