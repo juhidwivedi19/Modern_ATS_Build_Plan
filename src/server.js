@@ -2,6 +2,7 @@ const http = require("http");
 require("dotenv").config();
 
 require("./config/db.config");
+require("./config/redis.config");
 
 const app = require("./app");
 

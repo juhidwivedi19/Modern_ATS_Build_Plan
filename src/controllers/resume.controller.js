@@ -6,6 +6,8 @@ const {
     getSignedUrl
 } = require("../services/s3.service.js");
 
+//Add queue import
+const resumeQueue = require("../queues/resume.queue.js");
 
 // Controller for uploading candidate resume
 // Controller for uploading candidate resume
@@ -75,6 +77,12 @@ async function uploadResume(req, res) {
             }
         });
 
+        //Added BULLMQ JOB
+        await resumeQueue.add("process-resume", {
+         resumeId: resume.id,
+         fileKey: resume.fileKey,
+         fileType: resume.fileType
+       });
 
         // Send success response
         return res.status(201).json({
