@@ -12,6 +12,24 @@ const s3 = require("../config/s3.config.js");
 
 const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
 
+// Download file from S3
+async function downloadFromS3(key) {
+
+    const command = new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key
+    });
+
+    const response = await s3.send(command);
+
+    const chunks = [];
+
+    for await (const chunk of response.Body) {
+        chunks.push(chunk);
+    }
+
+    return Buffer.concat(chunks);
+}
 
 // Upload file to S3
 async function uploadToS3(file, key) {
@@ -65,5 +83,6 @@ async function getSignedUrl(key) {
 module.exports = {
     uploadToS3,
     deleteFromS3,
-    getSignedUrl
+    getSignedUrl,
+    downloadFromS3
 };

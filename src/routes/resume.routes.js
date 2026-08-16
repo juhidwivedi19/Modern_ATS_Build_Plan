@@ -7,7 +7,9 @@ const {authMiddleware} = require("../middlewares/auth.middleware");
     uploadResume,
     getCandidateResume,
     deleteResume,
-    getResumeDownloadUrl
+    getResumeDownloadUrl,
+    getResumeProcessingStatus,
+    searchResumes
 } = require("../controllers/resume.controller.js");
 
 const router = express.Router();
@@ -38,6 +40,19 @@ router.get(
     "/resumes/:resumeId/download",
     authMiddleware,
     getResumeDownloadUrl
+);
+
+router.get(
+    "/resumes/:resumeId/status",
+    authMiddleware,
+    getResumeProcessingStatus
+);
+
+// Recruiter search resumes
+router.get(
+    "/search",
+    authMiddleware,
+    searchResumes
 );
 
 

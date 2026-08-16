@@ -179,16 +179,37 @@ model Candidate {
 }
 
 model Resume {
-  id          Int      @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   candidateId Int
   fileName    String?
-  fileKey     String   @unique
+  fileKey     String  @unique
   fileType    String
+  searchText String?
   fileSize    Int
-  uploadedAt  DateTime @default(now())
+
+  extractedText    String?
+  processingStatus ResumeProcessingStatus @default(PENDING)
+
+  name  String?
+  email String?
+  phone String?
+
+  skills     Json?
+  education  Json?
+  experience Json?
+  projects   Json?
+
+  uploadedAt DateTime @default(now())
 
   candidate    Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   applications Application[]
+}
+
+enum ResumeProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }
 
 model Application {

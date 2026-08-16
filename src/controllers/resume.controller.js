@@ -9,6 +9,7 @@ const {
 //Add queue import
 const resumeQueue = require("../queues/resume.queue.js");
 
+//1..........
 // Controller for uploading candidate resume
 // Controller for uploading candidate resume
 async function uploadResume(req, res) {
@@ -67,28 +68,53 @@ async function uploadResume(req, res) {
 
 
         // Save resume information in PostgreSQL
-        const resume = await prisma.resume.create({
-            data: {
-                candidateId: candidate.id,
-                fileName: req.file.originalname,
-                fileKey: fileKey,
-                fileType: req.file.mimetype,
-                fileSize: req.file.size
-            }
-        });
+       // Save resume information in PostgreSQL
+const resume = await prisma.resume.create({
+    data: {
+        candidateId: candidate.id,
+        fileName: req.file.originalname,
+        fileKey: fileKey,
+        fileType: req.file.mimetype,
+        fileSize: req.file.size
+    }
+});
 
         //Added BULLMQ JOB
-        await resumeQueue.add("process-resume", {
-         resumeId: resume.id,
-         fileKey: resume.fileKey,
-         fileType: resume.fileType
-       });
+       await resumeQueue.add(
+    "process-resume",
+    {
+        resumeId: resume.id,
+        fileKey: resume.fileKey,
+        fileType: resume.fileType
+    },
+    {
+        //bullmq retries +backoff
+        attempts: 3,
+        backoff: {
+            type: "exponential",
+            delay: 2000
+        },
+        //REMOVE ON CMPLT ,REMOVE ON FAIL
+        //JOB CLEANUP AND RETENTION
+         removeOnComplete: {
+            count: 100
+        },
+
+        removeOnFail: {
+            count: 500
+        }
+    }
+);
 
         // Send success response
         return res.status(201).json({
             message: "Resume uploaded successfully",
             status: "success",
-            data: resume
+            data: {
+                resumeId: resume.id,
+                fileName: resume.fileName,
+                processingStatus: resume.processingStatus
+            }
         });
 
 
@@ -104,7 +130,8 @@ async function uploadResume(req, res) {
 }
 
 
-//Candidate can get their resume
+//2...........
+//STEP:-Candidate can get their resume
  async function getCandidateResume(req,res){
     try{
 
@@ -162,6 +189,7 @@ async function uploadResume(req, res) {
  }
 
 
+//3.............
  // Controller for deleting candidate resume
 async function deleteResume(req, res) {
     try {
@@ -238,6 +266,7 @@ async function deleteResume(req, res) {
 }
 
 
+//4...........
 // Controller for generating a secure resume download URL
 async function getResumeDownloadUrl(req, res) {
     try {
@@ -327,9 +356,155 @@ async function getResumeDownloadUrl(req, res) {
     }
 }
 
+
+//5............
+//GET RESUME PROCESSING STATUS
+async function getResumeProcessingStatus(req, res) {
+    try {
+        // Check authentication
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({
+                message: "Authentication required",
+                status: "failed"
+            });
+        }
+
+        // Get resume ID
+        const resumeId = Number(req.params.resumeId);
+
+        if (!Number.isInteger(resumeId) || resumeId <= 0) {
+            return res.status(400).json({
+                message: "Valid resume ID is required",
+                status: "failed"
+            });
+        }
+
+        // Find resume with candidate
+        const resume = await prisma.resume.findUnique({
+            where: {
+                id: resumeId
+            },
+            include: {
+                candidate: true
+            }
+        });
+
+        // Resume not found
+        if (!resume) {
+            return res.status(404).json({
+                message: "Resume not found",
+                status: "failed"
+            });
+        }
+
+        // Check ownership
+        if (resume.candidate.userId !== req.user.id) {
+            return res.status(403).json({
+                message: "You are not authorized to access this resume",
+                status: "failed"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Resume processing status fetched successfully",
+            status: "success",
+            data: {
+                resumeId: resume.id,
+                fileName: resume.fileName,
+                processingStatus: resume.processingStatus
+            }
+        });
+
+    } catch (error) {
+        console.error(
+            "Resume processing status error:",
+            error
+        );
+
+        return res.status(500).json({
+            message: "Failed to fetch resume processing status",
+            status: "failed"
+        });
+    }
+}
+
+
+//6...............
+// SEARCH RESUMES
+async function searchResumes(req, res) {
+    try {
+        // Check authentication
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({
+                message: "Authentication required",
+                status: "failed"
+            });
+        }
+
+        // Get search query
+        const query = req.query.q?.trim();
+
+        if (!query) {
+            return res.status(400).json({
+                message: "Search query is required",
+                status: "failed"
+            });
+        }
+
+        // Search resumes using PostgreSQL full-text search
+        const resumes = await prisma.$queryRaw`
+            SELECT
+                r.id,
+                r."candidateId",
+                r."fileName",
+                r."fileType",
+                r."fileSize",
+                r."processingStatus",
+                r."uploadedAt",
+                r.name,
+                r.email,
+                r.phone,
+                r.skills,
+                r.education,
+                r.experience,
+                r.projects
+            FROM "Resume" r
+            WHERE
+                r."processingStatus" = 'COMPLETED'
+                AND to_tsvector(
+                    'english',
+                    COALESCE(r."searchText", '')
+                ) @@ plainto_tsquery(
+                    'english',
+                    ${query}
+                )
+            ORDER BY r."uploadedAt" DESC
+        `;
+
+        return res.status(200).json({
+            message: "Resumes searched successfully",
+            status: "success",
+            data: resumes
+        });
+
+    } catch (error) {
+        console.error("Resume search error:", error);
+
+        return res.status(500).json({
+            message: "Failed to search resumes",
+            status: "failed"
+        });
+    }
+}
+
+
+
+
 module.exports = {
     uploadResume,
     getCandidateResume,
     deleteResume,
-    getResumeDownloadUrl
+    getResumeDownloadUrl,
+    getResumeProcessingStatus,
+    searchResumes
 };
