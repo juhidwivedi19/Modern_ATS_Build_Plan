@@ -1,5 +1,9 @@
 const prisma = require("../config/db.config.js");
 
+const {
+    moveApplication,
+    getApplicationActivity
+} = require("../services/applicationPipeline.service");
 
 // ======================================================
 // 1. CREATE APPLICATION
@@ -553,7 +557,8 @@ async function moveApplicationController(req, res) {
         const application =
             await moveApplication(
                 applicationId,
-                status
+                status,
+                req.user.id
             );
 
 
@@ -575,10 +580,44 @@ async function moveApplicationController(req, res) {
     }
 }
 
+
+
+//============================================
+//6. getApplicationActivity
+//==================================================
+ async function getApplicationActivityController(req,res){
+    try{
+        //1.Check Authentication
+        if(!req.user || !req.user.id){
+            return res.status(401).json({
+                message:"Authentication required",
+                status:"failed"
+            });
+        }
+
+        // 2.get application id
+         const applicationId = Number(req.params.applicationId);
+
+         //3.Validate application Id
+         if(!Number.isInteger(applicationId) || applicationId <= 0){
+            return res.status(400).json({
+                message:"Valid application Id is required",
+                status:"failed"
+            });
+         }
+    }catch(error){
+        return res.status(400).json({
+            message:"error.message",
+            status:"failed"
+
+        });
+    }
+ }
 module.exports = {
     createApplicationController,
     getCandidateApplicationsController,
     getApplicationController,
     getJobApplicationsController,
-    moveApplicationController
+    moveApplicationController,
+    getApplicationActivityController
 };

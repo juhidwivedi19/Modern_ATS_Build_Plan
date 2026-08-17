@@ -34,6 +34,8 @@ const allowedTransitions = {
   WITHDRAWN: [],
 };
 
+
+
 function isValidTransition(currentStatus, newStatus) {
   const allowedNextStatuses = allowedTransitions[currentStatus];
 
@@ -44,7 +46,9 @@ function isValidTransition(currentStatus, newStatus) {
   return allowedNextStatuses.includes(newStatus);
 }
 
-async function moveApplication(applicationId, newStatus) {
+
+
+async function moveApplication(applicationId, newStatus, performedById) {
 
   // 1. Find the application
   const application = await prisma.application.findUnique({
@@ -70,21 +74,73 @@ async function moveApplication(applicationId, newStatus) {
     );
   }
 
-  // 5. Update application status
-  const updatedApplication = await prisma.application.update({
-    where: {
-      id: applicationId,
-    },
-    data: {
-      status: newStatus,
-    },
+  // 5. Update application + create activity log
+  const result = await prisma.$transaction(async (tx) => {
+
+    const updatedApplication = await tx.application.update({
+      where: {
+        id: applicationId,
+      },
+      data: {
+        status: newStatus,
+      },
+    });
+
+    await tx.activityLog.create({
+      data: {
+        applicationId: applicationId,
+        performedById: performedById,
+        action: "STAGE_CHANGED",
+        oldStatus: currentStatus,
+        newStatus: newStatus,
+      },
+    });
+
+    return updatedApplication;
   });
 
   // 6. Return updated application
-  return updatedApplication;
-}
+  return result;
+}  
 
+
+
+async function getApplicationActivity(applicationId){
+      //1.Check if application Exist 
+      const application = await prisma.application.findUnique({
+        where:{
+            id:applicationId
+        }
+             });
+        if (!application){
+         throw new Error("Application not found")
+        }
+
+    // 2. Get activity logs
+    const activities = await prisma.activityLog.findMany({
+        where: {
+            applicationId: applicationId
+        },
+        include: {
+            performedBy: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true
+                }
+            }
+        },
+        orderBy: {
+            createdAt: "asc"
+        }
+    });
+
+    // 3. Return activity history
+    return activities;
+}
+    
 module.exports = {
   isValidTransition,
   moveApplication,
+  getApplicationActivity
 };
