@@ -63,10 +63,43 @@ async function sendInvitationEmail(email, role, invitationLink) {
     });
 }
 
+//For NOTIFICATION PHASE 7
+
+async function sendApplicationStageEmail(
+    email,
+    candidateName,
+    jobTitle,
+    status,
+    message
+) {
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Application Update - ${jobTitle}`,
+        html: `
+            <h2>Application Update</h2>
+
+            <p>Hello ${candidateName},</p>
+
+            <p>${message}</p>
+
+            <p>
+                <strong>Position:</strong> ${jobTitle}
+            </p>
+
+            <p>
+                <strong>Current Status:</strong> ${status}
+            </p>
+
+            <p>Thank you for using ATS Project.</p>
+        `
+    });
+}
 module.exports = {
     sendRegistrationEmail,
     sendVerificationEmail,
     sendPasswordResetEmail,
-    sendInvitationEmail
+    sendInvitationEmail,
+    sendApplicationStageEmail
 };
 

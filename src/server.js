@@ -1,6 +1,9 @@
 const http = require("http");
 require("dotenv").config();
 
+// require("./queues/email.queue.js");
+require("./workers/email.worker.js");
+
 require("./config/db.config");
 require("./config/redis.config");
 

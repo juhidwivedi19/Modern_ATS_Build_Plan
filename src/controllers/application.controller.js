@@ -605,9 +605,21 @@ async function moveApplicationController(req, res) {
                 status:"failed"
             });
          }
+           // 4. Get Application Activity
+        const activities =
+            await getApplicationActivity(applicationId,req.user.id);
+
+
+        // 5. Return Activity History
+        return res.status(200).json({
+            message: "Application activity fetched successfully",
+            status: "success",
+            data: activities
+        });
+
     }catch(error){
         return res.status(400).json({
-            message:"error.message",
+            message:error.message,
             status:"failed"
 
         });

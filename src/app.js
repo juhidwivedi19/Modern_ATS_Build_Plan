@@ -7,6 +7,7 @@ const authRouter = require("./routes/auth.routes");
 const organizationRouter = require("./routes/organization.routes");
 const resumeRouter = require("./routes/Resume.routes");
 const applicationRouter = require("./routes/application.routes");
+const notificationRoutes = require("./routes/notification.routes.js");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -16,5 +17,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/organization", organizationRouter);
 app.use("/api", resumeRouter);
 app.use("/api", applicationRouter);
+
+app.use("/api/notifications", notificationRoutes);
 
 module.exports = app;

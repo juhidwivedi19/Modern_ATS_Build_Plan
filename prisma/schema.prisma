@@ -25,6 +25,7 @@ model User {
   refreshTokens       RefreshToken[]
   candidate           Candidate?
   activityLogs        ActivityLog[]
+  notifications       Notification[]
 }
 
 model RefreshToken {
@@ -139,19 +140,26 @@ enum Permission {
   ORGANIZATION_VIEW
   ORGANIZATION_UPDATE
   ORGANIZATION_DELETE
+
   MEMBER_VIEW
   MEMBER_INVITE
   MEMBER_REMOVE
   MEMBER_ROLE_UPDATE
+
   DEPARTMENT_VIEW
   DEPARTMENT_CREATE
   DEPARTMENT_UPDATE
   DEPARTMENT_DELETE
+
   JOB_VIEW
   JOB_CREATE
   JOB_UPDATE
   JOB_PUBLISH
   JOB_ARCHIVE
+
+  APPLICATION_VIEW
+  APPLICATION_UPDATE
+  APPLICATION_MOVE
 }
 
 enum JobStatus {
@@ -161,19 +169,21 @@ enum JobStatus {
 }
 
 model Candidate {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   name      String
-  email     String   @unique
+  email     String  @unique
   phone     String
   location  String?
   education String?
   linkedin  String?
   portfolio String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   resumes      Resume[]
   applications Application[]
@@ -227,7 +237,8 @@ model Application {
   job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
   resume    Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
-  activityLogs ActivityLog[]
+  activityLogs  ActivityLog[]
+  notifications Notification[]
 
   @@unique([candidateId, jobId])
 }
@@ -253,9 +264,33 @@ model ActivityLog {
   createdAt     DateTime           @default(now())
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  performedBy User        @relation(fields: [performedById], references: [id], onDelete: Cascade)
+  performedBy User        @relation(fields: [performedById], references: [id], onDelete: Restrict)
 }
 
 enum ActivityAction {
   STAGE_CHANGED
+}
+
+model Notification {
+  id            Int              @id @default(autoincrement())
+  userId        Int
+  applicationId Int?
+  type          NotificationType
+  message       String
+  isRead        Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([applicationId])
+}
+
+enum NotificationType {
+  APPLICATION_RECEIVED
+  APPLICATION_STAGE_CHANGED
+  APPLICATION_REJECTED
+  APPLICATION_OFFER
+  APPLICATION_HIRED
 }
