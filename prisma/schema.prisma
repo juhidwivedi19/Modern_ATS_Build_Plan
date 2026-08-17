@@ -24,6 +24,7 @@ model User {
   organizationMembers OrganizationMember[]
   refreshTokens       RefreshToken[]
   candidate           Candidate?
+  activityLogs        ActivityLog[]
 }
 
 model RefreshToken {
@@ -184,7 +185,7 @@ model Resume {
   fileName    String?
   fileKey     String  @unique
   fileType    String
-  searchText String?
+  searchText  String?
   fileSize    Int
 
   extractedText    String?
@@ -218,7 +219,7 @@ model Application {
   jobId       Int
   resumeId    Int
   coverLetter String?
-  status      ApplicationStatus @default(SUBMITTED)
+  status      ApplicationStatus @default(APPLIED)
   appliedAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
@@ -226,16 +227,35 @@ model Application {
   job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
   resume    Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
 
+  activityLogs ActivityLog[]
+
   @@unique([candidateId, jobId])
 }
 
 enum ApplicationStatus {
-  SUBMITTED
-  UNDER_REVIEW
-  SHORTLISTED
-  INTERVIEW
+  APPLIED
+  SCREENING
+  TECHNICAL_INTERVIEW
+  HR_INTERVIEW
   OFFER
   HIRED
   REJECTED
   WITHDRAWN
+}
+
+model ActivityLog {
+  id            Int                @id @default(autoincrement())
+  applicationId Int
+  performedById Int
+  action        ActivityAction
+  oldStatus     ApplicationStatus?
+  newStatus     ApplicationStatus?
+  createdAt     DateTime           @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  performedBy User        @relation(fields: [performedById], references: [id], onDelete: Cascade)
+}
+
+enum ActivityAction {
+  STAGE_CHANGED
 }

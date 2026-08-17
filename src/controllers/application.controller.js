@@ -502,9 +502,83 @@ async function getJobApplicationsController(req, res) {
 }
 
 
+
+
+//=============================================================
+//5. Create applicationPipeline.controller.js
+//=====================================================================
+async function moveApplicationController(req, res) {
+    try {
+
+        // 1. Check authentication
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({
+                message: "Authentication required",
+                status: "failed"
+            });
+        }
+
+
+        // 2. Get application ID
+        const applicationId =
+            Number(req.params.applicationId);
+
+
+        // 3. Validate application ID
+        if (
+            !Number.isInteger(applicationId) ||
+            applicationId <= 0
+        ) {
+            return res.status(400).json({
+                message: "Valid application ID is required",
+                status: "failed"
+            });
+        }
+
+
+        // 4. Get new application status
+        const { status } = req.body;
+
+
+        // 5. Validate status
+        if (!status) {
+            return res.status(400).json({
+                message: "Application status is required",
+                status: "failed"
+            });
+        }
+
+
+        // 6. Move application
+        const application =
+            await moveApplication(
+                applicationId,
+                status
+            );
+
+
+        // 7. Return updated application
+        return res.status(200).json({
+            message: "Application moved successfully",
+            status: "success",
+            data: application
+        });
+
+
+    } catch (error) {
+
+        return res.status(400).json({
+            message: error.message,
+            status: "failed"
+        });
+
+    }
+}
+
 module.exports = {
     createApplicationController,
     getCandidateApplicationsController,
     getApplicationController,
-    getJobApplicationsController
+    getJobApplicationsController,
+    moveApplicationController
 };

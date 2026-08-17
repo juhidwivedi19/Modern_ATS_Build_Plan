@@ -1,5 +1,5 @@
 const express= require("express")
-const {createApplicationController, getCandidateApplicationsController,getApplicationController,getJobApplicationsController} = require("../controllers/application.controller.js")
+const {createApplicationController, getCandidateApplicationsController,getApplicationController,getJobApplicationsController,moveApplicationController} = require("../controllers/application.controller.js")
 const {authMiddleware} = require("../middlewares/auth.middleware.js")
 
 const router = express.Router();
@@ -30,6 +30,11 @@ router.get(
     "/organization/jobs/:jobId/applications",
     authMiddleware,
     getJobApplicationsController
+);
+
+router.patch(
+    "/applications/:applicationId/status",
+    moveApplicationController
 );
 
 module.exports=router;
