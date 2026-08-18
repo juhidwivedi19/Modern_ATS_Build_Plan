@@ -7,7 +7,7 @@ const {
     markAllNotificationsAsReadController
 } = require("../controllers/notification.controller.js");
 
-const authMiddleware = require("../middlewares/auth.middleware.js");
+const {authMiddleware} = require("../middlewares/auth.middleware.js");
 
 const router = express.Router();
 

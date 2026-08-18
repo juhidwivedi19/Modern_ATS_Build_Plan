@@ -20,12 +20,14 @@ model User {
   resetPasswordExpires     DateTime?
   resetPasswordToken       String?
 
-  jobs                Job[]
-  organizationMembers OrganizationMember[]
-  refreshTokens       RefreshToken[]
-  candidate           Candidate?
-  activityLogs        ActivityLog[]
-  notifications       Notification[]
+  jobs                 Job[]
+  organizationMembers  OrganizationMember[]
+  refreshTokens        RefreshToken[]
+  candidate            Candidate?
+  activityLogs         ActivityLog[]
+  notifications        Notification[]
+  createdInterviews    Interview[]            @relation("InterviewCreatedBy")
+  interviewAssignments InterviewInterviewer[]
 }
 
 model RefreshToken {
@@ -239,6 +241,7 @@ model Application {
 
   activityLogs  ActivityLog[]
   notifications Notification[]
+  interviews    Interview[]
 
   @@unique([candidateId, jobId])
 }
@@ -293,4 +296,46 @@ enum NotificationType {
   APPLICATION_REJECTED
   APPLICATION_OFFER
   APPLICATION_HIRED
+}
+
+model Interview {
+  id            Int             @id @default(autoincrement())
+  applicationId Int
+  type          InterviewType
+  scheduledAt   DateTime
+  duration      Int
+  meetingLink   String?
+  status        InterviewStatus @default(SCHEDULED)
+  createdById   Int
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  createdBy   User        @relation("InterviewCreatedBy", fields: [createdById], references: [id])
+
+  interviewers InterviewInterviewer[]
+}
+
+enum InterviewType {
+  SCREENING
+  TECHNICAL
+  HR
+  MANAGERIAL
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model InterviewInterviewer {
+  id          Int @id @default(autoincrement())
+  interviewId Int
+  userId      Int
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, userId])
 }
