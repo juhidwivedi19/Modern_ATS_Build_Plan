@@ -1,88 +1,102 @@
-const prisma = require("../config/db.config.js")
+const prisma = require("../config/db.config.js");
 
-const scheduleInterview = async ({
-    //function receives
-    applicationId,
-    type,
-    scheduledAt,
-    duration,
-    meetingLink,
-    createdById,
-}) => {
+async function scheduleInterview({
+  applicationId,
+  type,
+  scheduledAt,
+  duration,
+  meetingLink,
+  createdById,
+}) {
+  const validInterviewTypes = [
+    "SCREENING",
+    "TECHNICAL",
+    "HR",
+    "MANAGERIAL",
+  ];
 
- const validInterviewTypes = [
-  "SCREENING",
-  "TECHNICAL",
-  "HR",
-  "MANAGERIAL",
-];
+  // Check whether application exists
+  const application = await prisma.application.findUnique({
+    where: {
+      id: applicationId,
+    },
+  });
 
-     //Check application with this id exist or not
-    const application = await prisma.application.findUnique({
-        where:{
-            id: applicationId,
-        },
-    });
+  if (!application) {
+    throw new Error("Application not found");
+  }
 
-    if(!application){
-        throw new Error("Application  not found");
+  // Check whether creator exists
+  const creator = await prisma.user.findUnique({
+    where: {
+      id: createdById,
+    },
+  });
+
+  if (!creator) {
+    throw new Error("User not found");
+  }
+
+  // Validate interview type
+  if (!type) {
+    throw new Error("Interview type is required");
+  }
+
+  if (!validInterviewTypes.includes(type)) {
+    throw new Error("Invalid interview type");
+  }
+
+  // Validate scheduled date/time
+  if (!scheduledAt) {
+    throw new Error("Interview date and time are required");
+  }
+
+  const interviewDate = new Date(scheduledAt);
+
+  if (isNaN(interviewDate.getTime())) {
+    throw new Error("Invalid interview date and time");
+  }
+
+  // Prevent scheduling in the past
+  if (interviewDate <= new Date()) {
+    throw new Error("Interview cannot be scheduled in the past");
+  }
+
+  // Validate duration
+  if (
+    !Number.isInteger(duration) ||
+    duration <= 0 ||
+    duration > 480
+  ) {
+    throw new Error(
+      "Interview duration must be between 1 and 480 minutes"
+    );
+  }
+
+  // Validate meeting link
+  if (meetingLink !== undefined && meetingLink !== null) {
+    try {
+      new URL(meetingLink);
+    } catch (error) {
+      throw new Error("Invalid meeting link");
     }
+  }
 
-    //Verify that user creating the interview actually exist
-      const creator = await prisma.user.findUnique({
-        where:{
-            id: createdById,
-        },
-      });
+  // Create interview
+  const interview = await prisma.interview.create({
+    data: {
+      applicationId,
+      type,
+      scheduledAt: interviewDate,
+      duration,
+      meetingLink,
+      createdById,
+    },
+  });
 
-      if(!creator){
-        throw new Error("User not found");
-      }
+  return interview;
+}
 
-
-//Validate INTERVIEW details
-        if (!type) {
-              throw new Error("Interview type is required");
-          }
-
-      if (!validInterviewTypes.includes(type)) {
-           throw new Error("Invalid interview type");
-          }
-
-      if(!scheduledAt){
-        throw new Error("Interview Date and Time are required");
-      }
-
-      if (!Number.isInteger(duration) || duration <= 0 || duration > 480) {
-           throw new Error("Interview duration must be between 1 and 480 minutes");
-          }
-
-      const interviewDate = new Date(scheduledAt);
-
-      if(isNaN(interviewDate.getTime())){
-        throw new Error("Invalid interview Date and Time");
-      }
-
-     // Prevent scheduling in the past
-      if (interviewDate <= new Date()) {
-        throw new Error("Interview cannot be scheduled in the past");
-        }
-
-    //=================
-    //Then create record in your interview table
-    const interview = await prisma.interview.create({
-          data:{
-            applicationId,
-            type,
-            scheduledAt,
-            duration,
-            meetingLink,
-            createdById
-          },
-    });
-
-    return interview;
-};
 //==================
 //Assign interviewer
 //==================
@@ -233,9 +247,168 @@ async function getInterviewById(interviewId) {
 
   return interview;
 }
+
+
+//===========================
+//Get All Interview
+//===========================
+async function getAllInterviews() {
+  const interviews = await prisma.interview.findMany({
+    orderBy: {
+      scheduledAt: "asc",
+    },
+    include: {
+      application: {
+        include: {
+          candidate: true,
+          job: true,
+        },
+      },
+      createdBy: true,
+      interviewers: {
+        include: {
+          user: true,
+        },
+      },
+    },
+  });
+
+  return interviews;
+}
+
+//===================================
+//Update / Reschedule interview
+//===================================
+async function updateInterview({
+  interviewId,
+  type,
+  scheduledAt,
+  duration,
+  meetingLink,
+}) {
+  const interview = await prisma.interview.findUnique({
+    where: {
+      id: interviewId,
+    },
+  });
+
+  if (!interview) {
+    throw new Error("Interview not found");
+  }
+
+  if (interview.status === "CANCELLED") {
+    throw new Error("Cancelled interview cannot be updated");
+  }
+
+  if (interview.status === "COMPLETED") {
+    throw new Error("Completed interview cannot be updated");
+  }
+
+  const data = {};
+
+  if (type !== undefined) {
+    const validInterviewTypes = [
+      "SCREENING",
+      "TECHNICAL",
+      "HR",
+      "MANAGERIAL",
+    ];
+
+    if (!validInterviewTypes.includes(type)) {
+      throw new Error("Invalid interview type");
+    }
+
+    data.type = type;
+  }
+
+  if (scheduledAt !== undefined) {
+    const interviewDate = new Date(scheduledAt);
+
+    if (isNaN(interviewDate.getTime())) {
+      throw new Error("Invalid interview date and time");
+    }
+
+    if (interviewDate <= new Date()) {
+      throw new Error("Interview cannot be scheduled in the past");
+    }
+
+    data.scheduledAt = interviewDate;
+  }
+
+  if (duration !== undefined) {
+    if (
+      !Number.isInteger(duration) ||
+      duration <= 0 ||
+      duration > 480
+    ) {
+      throw new Error(
+        "Interview duration must be between 1 and 480 minutes"
+      );
+    }
+
+    data.duration = duration;
+  }
+
+  if (meetingLink !== undefined) {
+    data.meetingLink = meetingLink;
+  }
+
+  if (Object.keys(data).length === 0) {
+    throw new Error("No fields provided for update");
+  }
+
+  const updatedInterview = await prisma.interview.update({
+    where: {
+      id: interviewId,
+    },
+    data,
+  });
+
+  return updatedInterview;
+}
+
+
+//============================
+//Cancel Interview
+//==========================
+async function cancelInterview(interviewId){
+   const interview = await prisma.interview.findUnique({
+    where:{
+      id:interviewId,
+    },
+   });
+
+
+  if (!interview) {
+    throw new Error("Interview not found");
+  }
+
+  if (interview.status === "CANCELLED") {
+    throw new Error("Interview is already cancelled");
+  }
+
+  if (interview.status === "COMPLETED") {
+    throw new Error("Completed interview cannot be cancelled");
+  }
+
+  const cancelledInterview = await prisma.interview.update({
+    where: {
+      id: interviewId,
+    },
+    data: {
+      status: "CANCELLED",
+    },
+  });
+
+  return cancelledInterview;
+}
 module.exports = {
     scheduleInterview,
     assignInterviewer,
     removeInterviewer,
-    getInterviewById
+    getInterviewById,
+    getAllInterviews,
+    updateInterview,
+    cancelInterview,
+    cancelInterview
 };

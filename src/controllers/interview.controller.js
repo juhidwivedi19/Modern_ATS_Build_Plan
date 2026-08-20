@@ -112,9 +112,96 @@ async function getInterviewByIdController(req, res) {
   }
 }
 
+
+//========================
+//Get All Interview
+//========================
+
+async function getAllInterviewsController(req, res) {
+  try {
+    const interviews = await interviewService.getAllInterviews();
+
+    return res.status(200).json({
+      success: true,
+      interviews,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+
+//=======================
+//Update interview
+//========================
+async function updateInterviewController(req,res){
+  try{
+
+      const {interviewId} = req.params;
+
+      const{
+        type,
+        scheduledAt,
+        duration,
+        meetingLink,
+      } = req.body;
+
+      const interview = await interviewService.updateInterview({
+        interviewId: Number(interviewId),
+        type,
+        scheduledAt,
+        duration,
+        meetingLink
+      })
+
+    return res.status(200).json({
+      message:"Interview updated successfully",
+     status:"Success",
+     interview
+    });
+  }catch(error){
+    return res.status(400).json({
+      message:"Internal server error",
+      status:"failed"
+    })
+  }
+}
+
+
+//========================
+//cancel Interview
+//==========================
+async function cancelInterviewController(req,res){
+  try{
+    const {interviewId} = req.params;
+
+    const interview = await interviewService.cancelInterview(
+      Number(interviewId)
+    );
+   
+return res.status(200).json({
+  message:"Interview Cancelled successfully",
+  status:"success",
+  interview,
+})
+      }
+       catch(error){
+      return res.status(400).json({
+        message:error.message,
+        status:"failed"
+      });
+    }
+    }
+  
 module.exports = {
   scheduleInterviewController,
   assignInterviewerController,
   removeInterviewerController,
-  getInterviewByIdController
+  getInterviewByIdController,
+  getAllInterviewsController,
+  updateInterviewController,
+  cancelInterviewController
 };
