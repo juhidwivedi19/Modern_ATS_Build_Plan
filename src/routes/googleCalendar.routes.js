@@ -1,8 +1,8 @@
 const express = require("express");
 
 const {
-    connectGoogleCalendarController,GoogleCalendarCallbackController,
-    googleCalendarCallbackController
+    connectGoogleCalendarController,googleCalendarCallbackController,
+    getCalendarStatusController,disconnectGoogleCalendarController
 } = require("../controllers/googleCalendar.Controller.js");
 
 const { authMiddleware } = require("../middlewares/auth.middleware");
@@ -17,7 +17,20 @@ router.get(
 
 router.get(
     "/oauth/callback",
+    authMiddleware,
     googleCalendarCallbackController
+);
+
+router.get(
+    "/status",
+    authMiddleware,
+    getCalendarStatusController
+);
+
+router.delete(
+    "/disconnect",
+    authMiddleware,
+    disconnectGoogleCalendarController
 );
 
 module.exports = router;

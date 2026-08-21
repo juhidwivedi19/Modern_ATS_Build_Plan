@@ -95,11 +95,248 @@ async function sendApplicationStageEmail(
         `
     });
 }
+
+
+//================
+//Add Schedule interview email
+//====================
+async function sendInterviewScheduledEmail(
+    email,
+    candidateName,
+    jobTitle,
+    interviewType,
+    scheduledAt,
+    duration,
+    meetingLink
+) {
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Interview Scheduled - ${jobTitle}`,
+        html: `
+            <h2>Interview Scheduled</h2>
+
+            <p>Hello ${candidateName},</p>
+
+            <p>Your interview has been scheduled.</p>
+
+            <p>
+                <strong>Position:</strong> ${jobTitle}
+            </p>
+
+            <p>
+                <strong>Interview Type:</strong> ${interviewType}
+            </p>
+
+            <p>
+                <strong>Date & Time:</strong> ${scheduledAt}
+            </p>
+
+            <p>
+                <strong>Duration:</strong> ${duration} minutes
+            </p>
+
+            ${
+                meetingLink
+                    ? `
+                    <p>
+                        <strong>Meeting Link:</strong>
+                        <a href="${meetingLink}">
+                            Join Interview
+                        </a>
+                    </p>
+                    `
+                    : ""
+            }
+
+            <p>Please make sure you are available at the scheduled time.</p>
+
+            <p>Best wishes!</p>
+
+            <p>ATS Project</p>
+        `
+    });
+}
+
+
+
+//=====================
+//ADD RESCHEDULE INTERVIEW EMAIL
+async function sendInterviewRescheduledEmail(
+    email,
+    candidateName,
+    jobTitle,
+    interviewType,
+    scheduledAt,
+    duration,
+    meetingLink
+) {
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Interview Rescheduled - ${jobTitle}`,
+        html: `
+            <h2>Interview Rescheduled</h2>
+
+            <p>Hello ${candidateName},</p>
+
+            <p>Your interview has been rescheduled.</p>
+
+            <p>
+                <strong>Position:</strong> ${jobTitle}
+            </p>
+
+            <p>
+                <strong>Interview Type:</strong> ${interviewType}
+            </p>
+
+            <p>
+                <strong>New Date & Time:</strong> ${scheduledAt}
+            </p>
+
+            <p>
+                <strong>Duration:</strong> ${duration} minutes
+            </p>
+
+            ${
+                meetingLink
+                    ? `
+                    <p>
+                        <strong>Meeting Link:</strong>
+                        <a href="${meetingLink}">
+                            Join Interview
+                        </a>
+                    </p>
+                    `
+                    : ""
+            }
+
+            <p>Please make a note of the new interview time.</p>
+
+            <p>ATS Project</p>
+        `
+    });
+}
+
+
+
+//=====================
+//Add Cancel interview email
+//======================
+async function sendInterviewCancelledEmail(
+    email,
+    candidateName,
+    jobTitle,
+    interviewType
+) {
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Interview Cancelled - ${jobTitle}`,
+        html: `
+            <h2>Interview Cancelled</h2>
+
+            <p>Hello ${candidateName},</p>
+
+            <p>
+                We would like to inform you that your interview
+                has been cancelled.
+            </p>
+
+            <p>
+                <strong>Position:</strong> ${jobTitle}
+            </p>
+
+            <p>
+                <strong>Interview Type:</strong> ${interviewType}
+            </p>
+
+            <p>
+                If the interview is rescheduled, you will receive
+                another notification.
+            </p>
+
+            <p>ATS Project</p>
+        `
+    });
+}
+
+
+//======================
+//Add reminder email
+//================
+
+async function sendInterviewReminderEmail(
+    email,
+    candidateName,
+    jobTitle,
+    interviewType,
+    scheduledAt,
+    meetingLink,
+    reminderTime
+) {
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Interview Reminder - ${jobTitle}`,
+        html: `
+            <h2>Interview Reminder</h2>
+
+            <p>Hello ${candidateName},</p>
+
+            <p>
+                This is a reminder that you have an upcoming interview.
+            </p>
+
+            <p>
+                <strong>Position:</strong> ${jobTitle}
+            </p>
+
+            <p>
+                <strong>Interview Type:</strong> ${interviewType}
+            </p>
+
+            <p>
+                <strong>Date & Time:</strong> ${scheduledAt}
+            </p>
+
+            <p>
+                <strong>Reminder:</strong> ${reminderTime}
+            </p>
+
+            ${
+                meetingLink
+                    ? `
+                    <p>
+                        <strong>Meeting Link:</strong>
+                        <a href="${meetingLink}">
+                            Join Interview
+                        </a>
+                    </p>
+                    `
+                    : ""
+            }
+
+            <p>Please be ready before the scheduled time.</p>
+
+            <p>ATS Project</p>
+        `
+    });
+}
+
+
+//=================
+//send interview reminder email
+
 module.exports = {
     sendRegistrationEmail,
     sendVerificationEmail,
     sendPasswordResetEmail,
     sendInvitationEmail,
-    sendApplicationStageEmail
+    sendApplicationStageEmail,
+    sendInterviewScheduledEmail,
+    sendInterviewRescheduledEmail,
+    sendInterviewCancelledEmail,
+    sendInterviewReminderEmail
 };
 
