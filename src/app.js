@@ -10,6 +10,7 @@ const applicationRouter = require("./routes/application.routes");
 const notificationRoutes = require("./routes/notification.routes.js");
 const interviewRoutes = require("./routes/interview.routes");
 const googleCalendarRoutes = require("./routes/googleCalendar.routes");
+const interviewEvaluationRoutes = require("./routes/interviewEvaluation.routes.js");
 
 
 app.use(express.json());
@@ -22,6 +23,7 @@ app.use("/api", applicationRouter);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/interviews",interviewRoutes);
 app.use("/api/calendar", googleCalendarRoutes);
+app.use("/api/interviews", interviewEvaluationRoutes);
 
 
 module.exports = app;

@@ -20,15 +20,17 @@ model User {
   resetPasswordExpires     DateTime?
   resetPasswordToken       String?
 
-  jobs                 Job[]
-  organizationMembers  OrganizationMember[]
-  refreshTokens        RefreshToken[]
-  candidate            Candidate?
-  activityLogs         ActivityLog[]
-  notifications        Notification[]
-  createdInterviews    Interview[]            @relation("InterviewCreatedBy")
-  interviewAssignments InterviewInterviewer[]
-    googleCalendarAccount  GoogleCalendarAccount?
+  jobs                  Job[]
+  organizationMembers   OrganizationMember[]
+  refreshTokens         RefreshToken[]
+  candidate             Candidate?
+  activityLogs          ActivityLog[]
+  notifications         Notification[]
+  createdInterviews     Interview[]            @relation("InterviewCreatedBy")
+  interviewAssignments  InterviewInterviewer[]
+  googleCalendarAccount GoogleCalendarAccount?
+
+  interviewEvaluationNotes InterviewEvaluationNote[]
 }
 
 model RefreshToken {
@@ -311,7 +313,7 @@ model Interview {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-googleEventId String?
+  googleEventId String?
 
   application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   createdBy   User        @relation("InterviewCreatedBy", fields: [createdById], references: [id])
@@ -340,20 +342,60 @@ model InterviewInterviewer {
   interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  evaluation InterviewEvaluation?
+
   @@unique([interviewId, userId])
 }
 
-
-
 model GoogleCalendarAccount {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @unique
+  id           Int       @id @default(autoincrement())
+  userId       Int       @unique
   accessToken  String
   refreshToken String?
   tokenExpiry  DateTime?
-  calendarId   String   @default("primary")
+  calendarId   String    @default("primary")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Recommendation {
+  STRONG_HIRE
+  HIRE
+  MAYBE
+  NO_HIRE
+}
+
+model InterviewEvaluation {
+  id String @id @default(uuid())
+
+  technicalSkills Int
+  problemSolving  Int
+  communication   Int
+  overall         Int
+
+  recommendation Recommendation
+  feedback       String?
+
+  interviewerId Int @unique
+
+  interviewer InterviewInterviewer @relation(fields: [interviewerId], references: [id])
+
+  notes InterviewEvaluationNote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model InterviewEvaluationNote {
+  id           String   @id @default(uuid())
+  evaluationId String
+  authorId     Int
+  note         String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evaluation InterviewEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  author     User                @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
