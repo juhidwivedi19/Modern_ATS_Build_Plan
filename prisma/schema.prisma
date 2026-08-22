@@ -30,7 +30,8 @@ model User {
   interviewAssignments  InterviewInterviewer[]
   googleCalendarAccount GoogleCalendarAccount?
 
-  interviewEvaluationNotes InterviewEvaluationNote[]
+  interviewEvaluationNotes    InterviewEvaluationNote[]
+  interviewEvaluationComments InterviewEvaluationComment[]
 }
 
 model RefreshToken {
@@ -382,7 +383,8 @@ model InterviewEvaluation {
 
   interviewer InterviewInterviewer @relation(fields: [interviewerId], references: [id])
 
-  notes InterviewEvaluationNote[]
+  notes    InterviewEvaluationNote[]
+  comments InterviewEvaluationComment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -395,6 +397,19 @@ model InterviewEvaluationNote {
   note         String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  evaluation InterviewEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  author     User                @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model InterviewEvaluationComment {
+  id           String @id @default(uuid())
+  evaluationId String
+  authorId     Int
+  content      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   evaluation InterviewEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
   author     User                @relation(fields: [authorId], references: [id], onDelete: Cascade)
