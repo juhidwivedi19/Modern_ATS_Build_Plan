@@ -1,5 +1,5 @@
 const {
-  createInterviewEvaluation, getInterviewEvaluation,  updateInterviewEvaluation,
+  createInterviewEvaluation, getInterviewEvaluations,  updateInterviewEvaluation, deleteInterviewEvaluation,
 } = require("../services/interviewEvaluation.service.js");
 
 async function createInterviewEvaluationController(req, res) {
@@ -46,23 +46,23 @@ async function createInterviewEvaluationController(req, res) {
 //======================
 //GET INTERVIEW EVALUATION
 //=================
-async function getInterviewEvaluationController(req, res) {
+async function getInterviewEvaluationsController(req, res) {
   try {
     const { interviewId } = req.params;
 
     const userId = req.user.id;
 
-    const evaluation = await getInterviewEvaluation({
+    const evaluations = await getInterviewEvaluations({
       interviewId: Number(interviewId),
       userId,
     });
 
     return res.status(200).json({
       success: true,
-      data: evaluation,
+      data: evaluations,
     });
   } catch (error) {
-    console.error("Get interview evaluation error:", error);
+    console.error("Get interview evaluations error:", error);
 
     return res.status(400).json({
       success: false,
@@ -116,8 +116,41 @@ async function updateInterviewEvaluationController(req, res) {
   }
 }
 
+
+// ======================
+// DELETE INTERVIEW EVALUATION
+// ======================
+
+async function deleteInterviewEvaluationController(req, res) {
+  try {
+    const { interviewId } = req.params;
+
+    const userId = req.user.id;
+
+    const result = await deleteInterviewEvaluation({
+      interviewId: Number(interviewId),
+      userId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    console.error(
+      "Delete interview evaluation error:",
+      error
+    );
+
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
 module.exports = {
   createInterviewEvaluationController,
-  getInterviewEvaluationController,
-  updateInterviewEvaluationController
-};
+  getInterviewEvaluationsController,
+  updateInterviewEvaluationController,
+  deleteInterviewEvaluationController
+};  

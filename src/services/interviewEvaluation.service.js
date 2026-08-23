@@ -1,5 +1,9 @@
 const prisma = require("../config/db.config.js");
 
+const {
+  canAccessInterviewEvaluation,
+} = require("./interviewPermission.service.js");
+
 async function createInterviewEvaluation({
   interviewId,
   userId,
@@ -95,38 +99,54 @@ if (!validRecommendations.includes(recommendation)) {
 
   return evaluation;
 }
+// =================
+// Get Interview Evaluations
+// =================
 
-//=================
-//get InterviewEvaluation
-//====================
-async function getInterviewEvaluation({
+async function getInterviewEvaluations({
   interviewId,
   userId,
 }) {
-  const interviewerAssignment =
-    await prisma.interviewInterviewer.findUnique({
-      where: {
-        interviewId_userId: {
-          interviewId,
-          userId,
-        },
-      },
-      include: {
-        evaluation: true,
-      },
-    });
+  // 1. Check whether user has permission
+  const hasAccess = await canAccessInterviewEvaluation({
+    interviewId,
+    userId,
+  });
 
-  if (!interviewerAssignment) {
+  if (!hasAccess) {
     throw new Error(
-      "You are not assigned as an interviewer for this interview"
+      "You are not allowed to view interview evaluations"
     );
   }
 
-  if (!interviewerAssignment.evaluation) {
-    throw new Error("Evaluation not found");
-  }
+  // 2. Find all evaluations for this interview
+  const evaluations =
+    await prisma.interviewEvaluation.findMany({
+      where: {
+        interviewer: {
+          interviewId,
+        },
+      },
+      include: {
+        interviewer: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
 
-  return interviewerAssignment.evaluation;
+
+  return evaluations;
 }
 
 //=================
@@ -142,6 +162,25 @@ async function updateInterviewEvaluation({
   recommendation,
   feedback,
 }) {
+  // 1. Find interview
+  const interview = await prisma.interview.findUnique({
+    where: {
+      id: interviewId,
+    },
+  });
+
+  if (!interview) {
+    throw new Error("Interview not found");
+  }
+
+  // 2. Interview must be completed
+  if (interview.status !== "COMPLETED") {
+    throw new Error(
+      "Evaluation can only be updated after the interview is completed"
+    );
+  }
+
+  // 3. Find interviewer assignment
   const interviewerAssignment =
     await prisma.interviewInterviewer.findUnique({
       where: {
@@ -161,10 +200,12 @@ async function updateInterviewEvaluation({
     );
   }
 
+  // 4. Evaluation must exist
   if (!interviewerAssignment.evaluation) {
     throw new Error("Evaluation not found");
   }
 
+  // 5. Validate ratings
   const ratings = {
     technicalSkills,
     problemSolving,
@@ -174,10 +215,13 @@ async function updateInterviewEvaluation({
 
   for (const [key, value] of Object.entries(ratings)) {
     if (!Number.isInteger(value) || value < 1 || value > 5) {
-      throw new Error(`${key} rating must be between 1 and 5`);
+      throw new Error(
+        `${key} rating must be between 1 and 5`
+      );
     }
   }
 
+  // 6. Validate recommendation
   const validRecommendations = [
     "STRONG_HIRE",
     "HIRE",
@@ -189,6 +233,7 @@ async function updateInterviewEvaluation({
     throw new Error("Invalid recommendation");
   }
 
+  // 7. Update evaluation
   const updatedEvaluation =
     await prisma.interviewEvaluation.update({
       where: {
@@ -206,8 +251,52 @@ async function updateInterviewEvaluation({
 
   return updatedEvaluation;
 }
+
+
+// =====================
+// DELETE INTERVIEW EVALUATION
+// =====================
+
+async function deleteInterviewEvaluation({
+  interviewId,
+  userId,
+}) {
+  const interviewerAssignment =
+    await prisma.interviewInterviewer.findUnique({
+      where: {
+        interviewId_userId: {
+          interviewId,
+          userId,
+        },
+      },
+      include: {
+        evaluation: true,
+      },
+    });
+
+  if (!interviewerAssignment) {
+    throw new Error(
+      "You are not assigned as an interviewer for this interview"
+    );
+  }
+
+  if (!interviewerAssignment.evaluation) {
+    throw new Error("Evaluation not found");
+  }
+
+  await prisma.interviewEvaluation.delete({
+    where: {
+      id: interviewerAssignment.evaluation.id,
+    },
+  });
+
+  return {
+    message: "Interview evaluation deleted successfully",
+  };
+}
 module.exports = {
   createInterviewEvaluation,
-  getInterviewEvaluation,
-  updateInterviewEvaluation
+  getInterviewEvaluations,
+  updateInterviewEvaluation,
+  deleteInterviewEvaluation
 };

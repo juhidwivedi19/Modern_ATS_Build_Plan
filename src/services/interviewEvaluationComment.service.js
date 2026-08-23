@@ -1,5 +1,6 @@
 const prisma = require("../config/db.config.js");
 
+
 //===========================
 //interviewEvaluationComment.service.js
 //==========================
@@ -13,7 +14,7 @@ async function createInterviewEvaluationComment({
     throw new Error("Comment cannot be empty");
   }
 
-  // 2. Check whether user is assigned to this interview
+  // 2. Check interviewer assignment
   const interviewerAssignment =
     await prisma.interviewInterviewer.findUnique({
       where: {
@@ -48,6 +49,73 @@ async function createInterviewEvaluationComment({
         authorId: userId,
         content: content.trim(),
       },
+    });
+
+  // 5. Detect @mentions
+  const mentionedNames = [
+    ...content.matchAll(/@([a-zA-Z0-9._-]+)/g),
+  ].map((match) => match[1]);
+
+  // Remove duplicate names
+  const uniqueMentionedNames = [
+    ...new Set(mentionedNames),
+  ];
+
+  if (uniqueMentionedNames.length > 0) {
+    // 6. Find mentioned users
+    const mentionedUsers = await prisma.user.findMany({
+      where: {
+        name: {
+          in: uniqueMentionedNames,
+          mode: "insensitive",
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    // Don't allow users to mention themselves
+    const mentionedUserIds = [
+      ...new Set(
+        mentionedUsers
+          .map((user) => user.id)
+          .filter(
+            (mentionedUserId) =>
+              mentionedUserId !== userId
+          )
+      ),
+    ];
+
+    if (mentionedUserIds.length > 0) {
+      // 7. Create mention records
+      await prisma.interviewEvaluationCommentMention.createMany({
+        data: mentionedUserIds.map((mentionedUserId) => ({
+          commentId: comment.id,
+          userId: mentionedUserId,
+        })),
+        skipDuplicates: true,
+      });
+
+      // 8. Create notifications
+      await prisma.notification.createMany({
+        data: mentionedUserIds.map((mentionedUserId) => ({
+          userId: mentionedUserId,
+          type: "INTERVIEW_EVALUATION_MENTION",
+          message:
+            "You were mentioned in an interview evaluation comment.",
+        })),
+      });
+    }
+  }
+
+  // 9. Return comment with author and mentions
+  const createdComment =
+    await prisma.interviewEvaluationComment.findUnique({
+      where: {
+        id: comment.id,
+      },
       include: {
         author: {
           select: {
@@ -56,11 +124,23 @@ async function createInterviewEvaluationComment({
             email: true,
           },
         },
+        mentions: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
 
-  return comment;
+  return createdComment;
 }
+
 
 
 //=======================

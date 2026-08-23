@@ -4,7 +4,7 @@ const router = express.Router();
 
 
 const {
-  createInterviewEvaluationController,getInterviewEvaluationController,updateInterviewEvaluationController,
+  createInterviewEvaluationController,getInterviewEvaluationsController,updateInterviewEvaluationController,deleteInterviewEvaluationController
 } = require("../controllers/interviewEvaluation.controller.js");
 
 const { authMiddleware } = require("../middlewares/auth.middleware.js");
@@ -18,13 +18,19 @@ router.post(
 router.get(
   "/:interviewId/evaluation",
   authMiddleware,
-  getInterviewEvaluationController
+  getInterviewEvaluationsController
 );
 
 router.patch(
   "/:interviewId/evaluation",
   authMiddleware,
   updateInterviewEvaluationController
+);
+
+router.delete(
+  "/:interviewId/evaluation",
+  authMiddleware,
+  deleteInterviewEvaluationController
 );
 
 module.exports = router;
