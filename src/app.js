@@ -12,7 +12,7 @@ const interviewRoutes = require("./routes/interview.routes");
 const googleCalendarRoutes = require("./routes/googleCalendar.routes");
 const interviewEvaluationRoutes = require("./routes/interviewEvaluation.routes.js");
 const interviewEvaluationCommentRoutes = require("./routes/interviewEvaluationComment.routes.js");
-
+const candidateSearch = require("./routes/candidateSearch.routes.js");
 
 
 app.use(express.json());
@@ -27,6 +27,6 @@ app.use("/api/interviews",interviewRoutes);
 app.use("/api/calendar", googleCalendarRoutes);
 app.use("/api/interviews", interviewEvaluationRoutes);
 app.use("/api/interviews", interviewEvaluationCommentRoutes);
-
+app.use("/api/candidates", candidateSearchRoutes);
 
 module.exports = app;
