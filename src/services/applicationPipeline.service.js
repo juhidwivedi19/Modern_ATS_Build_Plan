@@ -5,6 +5,10 @@ const emailQueue = require("../queues/email.queue.js");
 const { hasPermission } =
     require("./permission.service.js");
 
+    const {
+    invalidateAnalyticsCache
+} = require("../utils/analyticsCache.js");
+
 const {
     createApplicationStageNotification
 } = require("./notification.service.js");
@@ -271,6 +275,9 @@ async function moveApplication(
             }
         );
 
+        await invalidateAnalyticsCache(
+    application.job.organizationId
+);
 
     // ---------------------------------------------------------
     // 8. Create in-app notification

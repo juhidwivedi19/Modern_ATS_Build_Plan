@@ -4,6 +4,9 @@ const googleCalendarService = require("./googleCalendar.service");
 const emailService = require("./email.service.js");
 
 const {
+    createInterviewScheduledNotification
+} = require("./notification.service.js");
+const {
     scheduleInterviewReminders,
     cancelInterviewReminders,
     rescheduleInterviewReminders,
@@ -95,6 +98,8 @@ async function scheduleInterview({
     }
   }
 
+
+
   // Create interview
   const interview = await prisma.interview.create({
     data: {
@@ -138,6 +143,21 @@ const updatedInterview = await prisma.interview.update({
         meetingLink: finalMeetingLink,
     },
 });
+
+
+// Create in-app interview notification
+try {
+    await createInterviewScheduledNotification(
+        applicationId,
+        updatedInterview.id,
+        createdById
+    );
+} catch (error) {
+    console.error(
+        "Failed to create interview notification:",
+        error.message
+    );
+}  
 
       try {
     await emailService.sendInterviewScheduledEmail(
@@ -616,6 +636,7 @@ async function cancelInterview(interviewId) {
 
     return cancelledInterview;
 }
+
 module.exports = {
     scheduleInterview,
     assignInterviewer,
@@ -624,5 +645,6 @@ module.exports = {
     getAllInterviews,
     updateInterview,
     cancelInterview,
+   
     
 };

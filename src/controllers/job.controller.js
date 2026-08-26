@@ -1,5 +1,9 @@
 const prisma = require("../config/db.config.js");
 
+const {
+    invalidateAnalyticsCache
+} = require("../utils/analyticsCache.js");
+
 //1:-Create job controller
     async function createJobController(req,res){
         try{
@@ -244,36 +248,37 @@ async function updateJobController(req,res){
         } = req.body;
 
         // check if job exist and belong to this organization
-        const existingjob = await prisma.job.findFirst({
-            where:{
-                id:jobId,
-                organizationId: organizationId
-            }
-        });
-        if(!existingJob){
-            return res.status(404).json({
-                message:"Job not found in this organization",
-                status:"failed"
-            });
-        }
+        const existingJob = await prisma.job.findFirst({
+    where: {
+        id: jobId,
+        organizationId: organizationId
+    }
+      });
+
+   if (!existingJob) {
+    return res.status(404).json({
+        message: "Job not found in this organization",
+        status: "failed"
+    });
+    }
 
           //if department is provided check department
-          if(department) {
-            const department= await prisma.department.findFirst({
-                where:{
-                        id: parseInt(departmentId),
-                        organizationId: organizationId
-                }
-            });
+         if (departmentId !== undefined) {
 
-              if (!department) {
-                return res.status(404).json({
-                    message: "Department not found in this organization",
-                    status: "failed"
-                });
-            }
-        
-          } 
+    const department = await prisma.department.findFirst({
+        where: {
+            id: parseInt(departmentId),
+            organizationId: organizationId
+        }
+    });
+
+    if (!department) {
+        return res.status(404).json({
+            message: "Department not found in this organization",
+            status: "failed"
+        });
+    }
+}
 
 
              // Update Job----------------------
@@ -381,7 +386,11 @@ async function updateJobController(req,res){
                     }
                 }
         }
-    })
+    });
+
+    await invalidateAnalyticsCache(
+    organizationId
+);
 
     return res.status(200).json({
         message:"Job published successfully",
@@ -458,6 +467,10 @@ async function updateJobController(req,res){
         }
     }
    });
+
+   await invalidateAnalyticsCache(
+    organizationId
+);
 
      return res.status(200).json({
         message: "Job archived successfully",

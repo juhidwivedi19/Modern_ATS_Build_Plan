@@ -1,6 +1,13 @@
 const prisma = require("../config/db.config.js");
 
 const {
+    invalidateAnalyticsCache
+} = require("../utils/analyticsCache.js");
+
+const {
+    createApplicationReceivedNotification
+} = require("../services/notification.service.js");
+const {
     moveApplication,
     getApplicationActivity
 } = require("../services/applicationPipeline.service");
@@ -38,7 +45,8 @@ async function createApplicationController(req, res) {
         // 5. Get application data
         const {
             resumeId,
-            coverLetter
+            coverLetter,
+            source
         } = req.body;
 
         // 6. Validate resume ID
@@ -75,6 +83,27 @@ async function createApplicationController(req, res) {
                 status: "failed"
             });
         }
+
+        // 7. Validate application source
+
+      const validSources = [
+          "DIRECT",
+          "LINKEDIN",
+          "REFERRAL",
+          "JOB_BOARD",
+         "COMPANY_WEBSITE",
+         "OTHER"
+           ];
+
+if (
+    source !== undefined &&
+    !validSources.includes(source)
+) {
+    return res.status(400).json({
+        message: "Invalid application source",
+        status: "failed"
+    });
+}
 
         // FIND CANDIDATE
 
@@ -164,13 +193,23 @@ async function createApplicationController(req, res) {
                 coverLetter:
                     coverLetter && coverLetter.trim()
                         ? coverLetter.trim()
-                        : null
+                        : null,
+                        source: source || "DIRECT"
             },
             include: {
                 job: true,
                 resume: true
             }
         });
+
+
+await invalidateAnalyticsCache(
+    job.organizationId
+);
+ 
+ await createApplicationReceivedNotification(
+     application.id
+      );
 
         return res.status(201).json({
             message: "Application submitted successfully",
@@ -560,6 +599,10 @@ async function moveApplicationController(req, res) {
                 status,
                 req.user.id
             );
+
+     await invalidateAnalyticsCache(
+        application.job.organizationId
+);
 
 
         // 7. Return updated application

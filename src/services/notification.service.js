@@ -128,7 +128,18 @@ async function createApplicationStageNotification(
     const jobTitle =
         application.job.title;
 
+let notificationType =
+    "APPLICATION_STAGE_CHANGED";
 
+if (newStatus === "OFFER") {
+    notificationType =
+        "APPLICATION_OFFER";
+}
+
+if (newStatus === "HIRED") {
+    notificationType =
+        "APPLICATION_HIRED";
+}
     // =========================================================
     // 4. Create Candidate Notification
     // =========================================================
@@ -145,7 +156,7 @@ async function createApplicationStageNotification(
 
             applicationId: applicationId,
 
-            type: "APPLICATION_STAGE_CHANGED",
+           type: notificationType,
 
             message: candidateMessage
         }
@@ -213,8 +224,8 @@ async function createApplicationStageNotification(
                 applicationId:
                     applicationId,
 
-                type:
-                    "APPLICATION_STAGE_CHANGED",
+            type:
+               notificationType,
 
                 message:
                     teamMessage
@@ -235,15 +246,139 @@ async function createApplicationStageNotification(
     };
 }
 
+// =============================================================
+// Create Interview Scheduled Notification
+// =============================================================
 
-// =============================================================
-// Exports
-// =============================================================
+async function createInterviewScheduledNotification(
+    applicationId,
+    interviewId,
+    performedById
+) {
+    const interview = await prisma.interview.findUnique({
+        where: {
+            id: interviewId
+        },
+        include: {
+            application: {
+                include: {
+                    candidate: true,
+                    job: true
+                }
+            }
+        }
+    });
+
+    if (!interview) {
+        throw new Error("Interview not found");
+    }
+
+    const application = interview.application;
+
+    // Candidate notification
+    await prisma.notification.create({
+        data: {
+            userId: application.candidate.userId,
+            applicationId: applicationId,
+            type: "APPLICATION_STAGE_CHANGED",
+            message: `Your ${interview.type} interview for ${application.job.title} has been scheduled for ${interview.scheduledAt.toLocaleString()}.`
+        }
+    });
+
+    // Find organization team members
+    const members = await prisma.organizationMember.findMany({
+        where: {
+            organizationId: application.job.organizationId,
+            role: {
+                in: [
+                    "OWNER",
+                    "ADMIN",
+                    "RECRUITER"
+                ]
+            },
+            userId: {
+                not: performedById
+            }
+        },
+        select: {
+            userId: true
+        }
+    });
+
+    // Team notifications
+    if (members.length > 0) {
+        await prisma.notification.createMany({
+            data: members.map(member => ({
+                userId: member.userId,
+                applicationId: applicationId,
+                type: "APPLICATION_STAGE_CHANGED",
+                message: `${application.candidate.name}'s ${interview.type} interview for ${application.job.title} has been scheduled.`
+            }))
+        });
+    }
+
+    return {
+        candidateNotified: true,
+        teamMembersNotified: members.length
+    };
+}
+
+
+async function createApplicationReceivedNotification(applicationId) {
+
+    const application = await prisma.application.findUnique({
+        where: {
+            id: applicationId
+        },
+        include: {
+            candidate: true,
+            job: true
+        }
+    });
+
+    if (!application) {
+        throw new Error("Application not found");
+    }
+
+    const members = await prisma.organizationMember.findMany({
+        where: {
+            organizationId: application.job.organizationId,
+            role: {
+                in: [
+                    "OWNER",
+                    "ADMIN",
+                    "RECRUITER"
+                ]
+            }
+        },
+        select: {
+            userId: true
+        }
+    });
+
+    if (members.length > 0) {
+        await prisma.notification.createMany({
+            data: members.map(member => ({
+                userId: member.userId,
+                applicationId: application.id,
+                type: "APPLICATION_RECEIVED",
+                message: `${application.candidate.name} has applied for ${application.job.title}.`
+            }))
+        });
+    }
+
+    return {
+        notified: members.length
+    };
+}
 
 module.exports = {
 
     createApplicationStageNotification,
 
+    createInterviewScheduledNotification,
+
+           createApplicationReceivedNotification,
     getCandidateApplicationMessage,
 
     getTeamApplicationMessage
