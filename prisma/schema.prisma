@@ -236,7 +236,7 @@ model Application {
   jobId       Int
   resumeId    Int
   coverLetter String?
-  source ApplicationSource @default(DIRECT)
+  source      ApplicationSource @default(DIRECT)
   status      ApplicationStatus @default(APPLIED)
   appliedAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
@@ -274,19 +274,25 @@ enum ApplicationStatus {
 
 model ActivityLog {
   id            Int                @id @default(autoincrement())
-  applicationId Int
+  applicationId Int?
   performedById Int
   action        ActivityAction
   oldStatus     ApplicationStatus?
   newStatus     ApplicationStatus?
   createdAt     DateTime           @default(now())
 
-  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  performedBy User        @relation(fields: [performedById], references: [id], onDelete: Restrict)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  performedBy User         @relation(fields: [performedById], references: [id], onDelete: Restrict)
 }
 
 enum ActivityAction {
   STAGE_CHANGED
+  JOB_CREATED
+  APPLICATION_SUBMITTED
+  RESUME_UPLOADED
+  INTERVIEW_SCHEDULED
+  FEEDBACK_ADDED
+  OFFER_SENT
 }
 
 model Notification {

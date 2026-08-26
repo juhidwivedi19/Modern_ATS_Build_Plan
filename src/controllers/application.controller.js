@@ -12,6 +12,9 @@ const {
     getApplicationActivity
 } = require("../services/applicationPipeline.service");
 
+const {
+    createActivityLog
+} = require("../services/activityLog.service.js");
 // ======================================================
 // 1. CREATE APPLICATION
 // Candidate applies for a published job
@@ -201,6 +204,12 @@ if (
                 resume: true
             }
         });
+
+    await createActivityLog({
+       applicationId: application.id,
+        performedById: userId,
+       action: "APPLICATION_SUBMITTED"
+});
 
 
 await invalidateAnalyticsCache(

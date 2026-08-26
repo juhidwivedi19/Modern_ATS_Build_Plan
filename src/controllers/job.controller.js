@@ -4,6 +4,10 @@ const {
     invalidateAnalyticsCache
 } = require("../utils/analyticsCache.js");
 
+const {
+    createActivityLog
+} = require("../services/activityLog.service.js");
+
 //1:-Create job controller
     async function createJobController(req,res){
         try{
@@ -11,7 +15,7 @@ const {
             const organizationId = parseInt(req.params.organizationId);
 
             //get loggedin user's Id
-            constcreatedById=req.user.Id;
+            const createdById=req.user.Id;
 
             //Get job details from req.body
             const{
@@ -42,7 +46,7 @@ const {
                 //check if department exist and belongs to this organization
                 const department = await prisma.department.findFirst({
                     where:{
-                        Id: parseInt(departmentId),
+                        id: parseInt(departmentId),
                         organizationId: organizationId
                     }
                 });
@@ -80,6 +84,10 @@ const {
             }
         });
             
+    await createActivityLog({
+         performedById: createdById,
+         action: "JOB_CREATED"
+         });
 
             return res.status(201).json({
                 message:"Job created successfully",

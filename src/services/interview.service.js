@@ -145,6 +145,16 @@ const updatedInterview = await prisma.interview.update({
 });
 
 
+// Create activity log
+const { createActivityLog } =
+    require("./activityLog.service.js");
+
+await createActivityLog({
+    applicationId: applicationId,
+    performedById: createdById,
+    action: "INTERVIEW_SCHEDULED"
+});
+
 // Create in-app interview notification
 try {
     await createInterviewScheduledNotification(
@@ -472,6 +482,8 @@ async function updateInterview(interviewId, data) {
             }),
         },
     });
+
+    
 
     // 5. Update Google Calendar event
     if (interview.googleEventId) {

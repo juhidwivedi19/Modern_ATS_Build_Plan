@@ -6,6 +6,9 @@ const {
     getSignedUrl
 } = require("../services/s3.service.js");
 
+const {
+    createActivityLog
+} = require("../services/activityLog.service.js");
 //Add queue import
 const resumeQueue = require("../queues/resume.queue.js");
 
@@ -79,6 +82,10 @@ const resume = await prisma.resume.create({
     }
 });
 
+await createActivityLog({
+    performedById: userId,
+    action: "RESUME_UPLOADED"
+});
         //Added BULLMQ JOB
        await resumeQueue.add(
     "process-resume",

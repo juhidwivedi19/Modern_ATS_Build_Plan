@@ -1,5 +1,8 @@
 const prisma = require("../config/db.config.js");
 
+const {
+    createActivityLog
+} = require("./activityLog.service.js");
 //we have two type of msg first for candidate second recruiter
 // =============================================================
 // Candidate Application Stage Message
@@ -83,7 +86,20 @@ async function createApplicationStageNotification(
     applicationId,
     newStatus,
     performedById
-) {
+)
+    {
+
+           // =========================================================
+    // Create Offer Sent Activity Log
+    // =========================================================
+
+    if (newStatus === "OFFER") {
+        await createActivityLog({
+            applicationId: applicationId,
+            performedById: performedById,
+            action: "OFFER_SENT"
+        });
+    }
 
     // 1. Find application
     const application =

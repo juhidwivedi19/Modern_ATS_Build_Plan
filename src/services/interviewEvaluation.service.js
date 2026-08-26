@@ -4,6 +4,10 @@ const {
   canAccessInterviewEvaluation,
 } = require("./interviewPermission.service.js");
 
+const {
+  createActivityLog
+} = require("./activityLog.service.js");
+
 async function createInterviewEvaluation({
   interviewId,
   userId,
@@ -96,6 +100,12 @@ if (!validRecommendations.includes(recommendation)) {
       feedback,
     },
   });
+
+  await createActivityLog({
+  applicationId: interview.applicationId,
+  performedById: userId,
+  action: "FEEDBACK_ADDED"
+});
 
   return evaluation;
 }
