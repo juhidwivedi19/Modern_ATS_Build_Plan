@@ -14,6 +14,8 @@ const interviewEvaluationRoutes = require("./routes/interviewEvaluation.routes.j
 const interviewEvaluationCommentRoutes = require("./routes/interviewEvaluationComment.routes.js");
 const candidateSearchRoutes = require("./routes/candidateSearch.routes.js");
 const analyticsRoutes = require("./routes/analytics.routes.js");
+const apiKeyRoutes = require("./routes/apiKey.routes.js");
+const externalApiRoutes = require("./routes/externalApi.routes.js");
 
 
 app.use(express.json());
@@ -30,5 +32,7 @@ app.use("/api/interviews", interviewEvaluationRoutes);
 app.use("/api/interviews", interviewEvaluationCommentRoutes);
 app.use("/api/candidates", candidateSearchRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/api-keys", apiKeyRoutes);
+app.use("/api/external", externalApiRoutes);
 
 module.exports = app;
