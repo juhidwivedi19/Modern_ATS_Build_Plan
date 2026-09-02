@@ -1,16 +1,41 @@
-import Navbar from "./components/Navbar";
+import {BrowserRouter, Routes, Route} from "react-router-dom";
+
+import MainLayout from "./components/layout/MainLayout";
+
+import Navbar from "./components/layout/Navbar";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 
 function App(){
   return(
-     <>
-            <Navbar />
+       <BrowserRouter>
 
-            <main>
-                <h1>Modern ATS</h1>
-                <p>Applicant Tracking System</p>
-            </main>
-        </>
-  );
+            <Routes>
+
+                <Route element={<MainLayout />}>
+
+                    <Route
+                        path="/"
+                        element={<Home />}
+                    />
+
+                    <Route
+                        path="/dashboard"
+                        element={<Dashboard />}
+                    />
+
+                </Route>
+
+                <Route
+                    path="/login"
+                    element={<Login />}
+                />
+
+            </Routes>
+
+        </BrowserRouter>
+    );
 }
 
 export default App;
