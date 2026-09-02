@@ -15,7 +15,7 @@ const {
             const organizationId = parseInt(req.params.organizationId);
 
             //get loggedin user's Id
-            const createdById=req.user.Id;
+            const createdById=req.user.id;
 
             //Get job details from req.body
             const{
@@ -103,7 +103,7 @@ const {
     }
 
 //2:get jobs controller
-     async function getJobController(req,res){
+     async function getJobsController(req,res){
     try{
     const organizationId = parseInt(req.params.organizationId);
 

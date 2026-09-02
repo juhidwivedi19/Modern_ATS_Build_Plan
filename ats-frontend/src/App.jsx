@@ -2,11 +2,10 @@ import {BrowserRouter, Routes, Route} from "react-router-dom";
 
 import MainLayout from "./components/layout/MainLayout";
 
-import Navbar from "./components/layout/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-
+import Register from "./pages/Register";
 function App(){
   return(
        <BrowserRouter>
@@ -31,6 +30,11 @@ function App(){
                     path="/login"
                     element={<Login />}
                 />
+
+                <Route
+                   path="/register"
+                   element={<Register />}
+                  />
 
             </Routes>
 

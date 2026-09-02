@@ -1,20 +1,20 @@
-require("dotenv").config();
+const { PrismaClient } = require("@prisma/client");
 
-const emailQueue = require("./src/queues/email.queue.js");
+const prisma = new PrismaClient();
 
-async function test() {
-    await emailQueue.add("application-stage-email", {
-        to: process.env.EMAIL_USER,
-        candidateName: "Test Candidate",
-        jobTitle: "Software Engineer",
-        status: "TECHNICAL_INTERVIEW",
-        message:
-            "Congratulations! Your application has progressed to the technical interview stage."
+async function makeOwner() {
+    await prisma.organizationMember.update({
+        where: {
+            id: 3
+        },
+        data: {
+            role: "OWNER"
+        }
     });
 
-    console.log("Test email job added");
-
-    process.exit(0);
+    console.log("User is now OWNER");
 }
 
-test();
+makeOwner()
+    .catch(console.error)
+    .finally(() => prisma.$disconnect());

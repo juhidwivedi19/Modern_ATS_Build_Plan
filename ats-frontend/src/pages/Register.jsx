@@ -1,19 +1,22 @@
 import { useState } from "react";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
-import {useAuth} from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
-function Login() {
+function Register() {
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const {setUser} = useAuth();
+
+    const { setUser } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            const response = await api.post("/auth/login", {
+            const response = await api.post("/auth/register", {
+                name,
                 email,
                 password
             });
@@ -21,16 +24,33 @@ function Login() {
             setUser(response.data.user);
 
             navigate("/dashboard");
+
         } catch (error) {
-            console.error("Login failed:", error);
+            console.error("Registration failed:", error);
+
+            if (error.response) {
+                console.log("Server response:", error.response.data);
+            } else if (error.request) {
+                console.log("Server is not reachable");
+            } else {
+                console.log("Error:", error.message);
+            }
         }
     };
 
     return (
         <div>
-            <h1>Login</h1>
+            <h1>Register</h1>
 
             <form onSubmit={handleSubmit}>
+
+                <input
+                    type="text"
+                    placeholder="Name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                />
+
                 <input
                     type="email"
                     placeholder="Email"
@@ -46,11 +66,12 @@ function Login() {
                 />
 
                 <button type="submit">
-                    Login
+                    Register
                 </button>
+
             </form>
         </div>
     );
 }
 
-export default Login;
+export default Register;

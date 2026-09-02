@@ -1,7 +1,7 @@
 const prisma = require("../config/db.config.js");
 const crypto = require ("crypto");
 
-const   sendInvitationEmail = require("../services/email.service");
+const   {sendInvitationEmail} = require("../services/email.service");
 
 //1.CREATE ORGANIZATION CONTROLLER
 // Create Organization Controller
@@ -274,12 +274,14 @@ async function inviteMemberController(req,res){
            message: "Invitation sent successfully",
            status: "success"
 });
-    } catch(error){
-        return res.status(500).json({
-            message: "An error occurred while sending the invitation",
-            status: "failed"
-        })
-    }
+    } catch (error) {
+    console.error("INVITATION EMAIL ERROR:", error);
+
+    return res.status(500).json({
+        message: error.message,
+        status: "failed"
+    });
+}
 }
 
 

@@ -7,7 +7,6 @@ const roleAuthorizationMiddleware = require("../middlewares/roleAuthorization.mi
 
 const router = express.Router();
 
-
 router.post(
     "/:organizationId/jobs",
     authMiddleware.authMiddleware,
@@ -28,7 +27,7 @@ router.get(
 );
 
 router.get(
-    "/:organizationId/job",
+    "/:organizationId/jobs/:jobId",
     authMiddleware.authMiddleware,
     organizationAuthorizationMiddleware.organizationAuthorizationMiddleware,
     jobController.getJobController

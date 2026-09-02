@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
 const app = express();
 
@@ -17,6 +18,12 @@ const analyticsRoutes = require("./routes/analytics.routes.js");
 const apiKeyRoutes = require("./routes/apiKey.routes.js");
 const externalApiRoutes = require("./routes/externalApi.routes.js");
 
+app.use(
+    cors({
+         origin: process.env.FRONTEND_URL,
+        credentials: true
+    })
+);
 
 app.use(express.json());
 app.use(cookieParser());

@@ -18,7 +18,7 @@ try{
     }
 
     
-    const organizationMember = await prisma.organizationmember.findUnique({
+    const organizationMember = await prisma.organizationMember.findUnique({
         where:{
              userId_organizationId:{
                 userId: userId,

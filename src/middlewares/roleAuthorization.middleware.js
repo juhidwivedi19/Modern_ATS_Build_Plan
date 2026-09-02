@@ -3,6 +3,7 @@ function roleAuthorizationMiddleware(allowedRoles) {
         try {
             const { organizationMember } = req;
 
+            
             if (!organizationMember) {
                 return res.status(403).json({
                     message: "Organization member information is missing",
