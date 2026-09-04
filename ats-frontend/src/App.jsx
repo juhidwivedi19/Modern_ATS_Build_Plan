@@ -1,4 +1,4 @@
-import {BrowserRouter, Routes, Route} from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import MainLayout from "./components/layout/MainLayout";
 
@@ -10,12 +10,19 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Organization from "./pages/Organization";
 import Members from "./pages/Members";
 import OrganizationDetails from "./pages/OrganizationDetails";
+import Departments from "./pages/Departments";
+import Jobs from "./pages/Jobs";
+import JobDetails from "./pages/JobDetails";
+import Candidates from "./pages/Candidates";
+import CandidateSearch from "./pages/CandidateSearch";
+import CandidateProfile from "./pages/CandidateProfile";
+import Applications from "./pages/Applications";
+import ApplyJob from "./pages/ApplyJob";
 
 
-function App(){
-  return(
-       <BrowserRouter>
-
+function App() {
+    return (
+        <BrowserRouter>
             <Routes>
 
                 <Route element={<MainLayout />}>
@@ -25,16 +32,16 @@ function App(){
                         element={<Home />}
                     />
 
-             <Route
-                   path="/dashboard"
-                   element={
-                  <ProtectedRoute>
-                  <Dashboard />
-                  </ProtectedRoute>
-               }
-             />
-    
-                <Route
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <Dashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
                         path="/organizations"
                         element={
                             <ProtectedRoute>
@@ -43,21 +50,86 @@ function App(){
                         }
                     />
 
-          <Route
-                   path="/organizations/:organizationId"
-                  element={
-                 <ProtectedRoute>
-                <OrganizationDetails />
-              </ProtectedRoute>
-            }
-           />
-         <Route
-              path="/organizations/:organizationId/members"
-              element={
-              <ProtectedRoute>
-              <Members />
-            </ProtectedRoute>
+                    <Route
+                        path="/organizations/:organizationId"
+                        element={
+                            <ProtectedRoute>
+                                <OrganizationDetails />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/organizations/:organizationId/members"
+                        element={
+                            <ProtectedRoute>
+                                <Members />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/organizations/:organizationId/departments"
+                        element={
+                            <ProtectedRoute>
+                                <Departments />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/organizations/:organizationId/jobs"
+                        element={
+                       <ProtectedRoute>
+                       <Jobs />
+                       </ProtectedRoute>
+                      }
+                      />
+
+                      <Route
+                          path="/organizations/:organizationId/jobs/:jobId"
+                            element={
+                        <ProtectedRoute>
+                       <JobDetails />
+                      </ProtectedRoute>
     }
+/>
+
+<Route
+    path="/candidates/profile"
+    element={
+        <ProtectedRoute>
+            <CandidateProfile />
+        </ProtectedRoute>
+    }
+/>
+
+
+                 <Route
+    path="/candidates"
+    element={
+        <ProtectedRoute>
+            <Candidates />
+        </ProtectedRoute>
+    }
+/>
+
+
+                    <Route
+                        path="/candidates/search"
+                           element={
+                      <ProtectedRoute>
+                      <CandidateSearch />
+                      </ProtectedRoute>
+                     }
+                    />
+              <Route
+                 path="/applications"
+                 element={
+                 <ProtectedRoute>
+                <Applications />
+                </ProtectedRoute>
+                  }
 />
 
                 </Route>
@@ -68,12 +140,20 @@ function App(){
                 />
 
                 <Route
-                   path="/register"
-                   element={<Register />}
-                  />
+                    path="/register"
+                    element={<Register />}
+                />
+
+                <Route
+    path="/jobs/:jobId/apply"
+    element={
+        <ProtectedRoute>
+            <ApplyJob />
+        </ProtectedRoute>
+    }
+/>
 
             </Routes>
-
         </BrowserRouter>
     );
 }

@@ -43,7 +43,6 @@ function Members() {
             setShowInviteForm(false);
 
             alert("Invitation sent successfully");
-
         } catch (error) {
             console.error("Failed to invite member:", error);
 
@@ -54,36 +53,54 @@ function Members() {
         }
     }
 
+    async function handleChangeRole(memberId, role) {
+        try {
+            await api.put(
+                `/organization/${organizationId}/members/${memberId}/role`,
+                {
+                    role: role
+                }
+            );
 
+            setMembers(
+                members.map((member) =>
+                    member.id === memberId
+                        ? { ...member, role: role }
+                        : member
+                )
+            );
 
-    async function handleChangeRole(memberId) {
-    try {
-        await api.put(
-            `/organization/${organizationId}/members/${memberId}/role`,
-            {
-                role: selectedRole
-            }
-        );
+            alert("Member role updated successfully");
+        } catch (error) {
+            console.error("Failed to change member role:", error);
 
-        setMembers(
-            members.map((member) =>
-                member.id === memberId
-                    ? { ...member, role: selectedRole }
-                    : member
-            )
-        );
-
-        alert("Member role updated successfully");
-
-    } catch (error) {
-        console.error("Failed to change member role:", error);
-
-        alert(
-            error.response?.data?.message ||
-            "Failed to change member role"
-        );
+            alert(
+                error.response?.data?.message ||
+                "Failed to change member role"
+            );
+        }
     }
-}
+
+    async function handleRemoveMember(memberId) {
+        try {
+            await api.delete(
+                `/organization/${organizationId}/members/${memberId}`
+            );
+
+            setMembers(
+                members.filter((member) => member.id !== memberId)
+            );
+
+            alert("Member removed successfully");
+        } catch (error) {
+            console.error("Failed to remove member:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to remove member"
+            );
+        }
+    }
 
     return (
         <div>
@@ -129,16 +146,35 @@ function Members() {
                         <p>Role: {member.role}</p>
 
                         <select
-    value={selectedRole}
-    onChange={(e) => setSelectedRole(e.target.value)}
->
-    <option value="OWNER">OWNER</option>
-    <option value="ADMIN">ADMIN</option>
-    <option value="RECRUITER">RECRUITER</option>
-    <option value="INTERVIEWER">INTERVIEWER</option>
-</select>
+                            value={selectedRole}
+                            onChange={(e) =>
+                                setSelectedRole(e.target.value)
+                            }
+                        >
+                            <option value="OWNER">OWNER</option>
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="RECRUITER">RECRUITER</option>
+                            <option value="INTERVIEWER">
+                                INTERVIEWER
+                            </option>
+                        </select>
 
-                        <button>
+                        <button
+                            onClick={() =>
+                                handleChangeRole(
+                                    member.id,
+                                    selectedRole
+                                )
+                            }
+                        >
+                            Change Role
+                        </button>
+
+                        <button
+                            onClick={() =>
+                                handleRemoveMember(member.id)
+                            }
+                        >
                             Remove
                         </button>
                     </div>
