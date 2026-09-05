@@ -180,6 +180,16 @@ function JobDetails() {
                         </button>
                     )}
 
+                    <button
+    onClick={() =>
+        navigate(
+            `/organizations/${organizationId}/jobs/${jobId}/applications`
+        )
+    }
+>
+    View Applications
+</button>
+
                     {job.status === "PUBLISHED" && (
                       <button
                     onClick={() => navigate(`/jobs/${job.id}/apply`)}

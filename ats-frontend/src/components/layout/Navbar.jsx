@@ -1,3 +1,4 @@
+
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/axios";
@@ -36,6 +37,8 @@ function Navbar() {
                     <>
                         <Link to="/dashboard">Dashboard</Link>
 
+                        <Link to="/resumes">Resumes</Link>
+
                         <button onClick={handleLogout}>
                             Logout
                         </button>
@@ -47,3 +50,4 @@ function Navbar() {
 }
 
 export default Navbar;
+

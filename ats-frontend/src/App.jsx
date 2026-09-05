@@ -18,6 +18,10 @@ import CandidateSearch from "./pages/CandidateSearch";
 import CandidateProfile from "./pages/CandidateProfile";
 import Applications from "./pages/Applications";
 import ApplyJob from "./pages/ApplyJob";
+import Resumes from "./pages/Resumes";
+import ApplicationDetails from "./pages/ApplicationDetails";
+import JobApplications from "./pages/JobApplications";
+import InterviewScheduling from "./pages/InterviewScheduling";
 
 
 function App() {
@@ -132,6 +136,50 @@ function App() {
                   }
 />
 
+<Route
+    path="/resumes"
+    element={
+        <ProtectedRoute>
+            <Resumes />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
+    path="/applications/:applicationId"
+    element={
+        <ProtectedRoute>
+            <ApplicationDetails />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
+    path="/organizations/:organizationId/jobs/:jobId/applications"
+    element={
+        <ProtectedRoute>
+            <JobApplications />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
+    path="/applications/:applicationId/activity"
+    element={
+        <ProtectedRoute>
+            <ApplicationActivity />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
+    path="/applications/:applicationId/interview/schedule"
+    element={
+        <ProtectedRoute>
+            <InterviewScheduling />
+        </ProtectedRoute>
+    }
+/>
                 </Route>
 
                 <Route
