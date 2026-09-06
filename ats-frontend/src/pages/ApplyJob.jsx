@@ -11,14 +11,16 @@ function ApplyJob() {
     const [resumeId, setResumeId] = useState("");
     const [coverLetter, setCoverLetter] = useState("");
     const [source, setSource] = useState("DIRECT");
+
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         async function fetchResumes() {
             try {
                 const response = await api.get("/resumes");
 
-                setResumes(response.data.data);
+                setResumes(response.data.data || []);
             } catch (error) {
                 console.error(
                     "Failed to fetch resumes:",
@@ -46,12 +48,14 @@ function ApplyJob() {
         }
 
         try {
+            setSubmitting(true);
+
             const response = await api.post(
                 `/jobs/${jobId}/apply`,
                 {
                     resumeId: Number(resumeId),
-                    coverLetter: coverLetter,
-                    source: source
+                    coverLetter,
+                    source
                 }
             );
 
@@ -74,126 +78,288 @@ function ApplyJob() {
                 error.response?.data?.message ||
                 "Failed to submit application"
             );
+        } finally {
+            setSubmitting(false);
         }
     }
 
     if (loading) {
-        return <div>Loading resumes...</div>;
+        return (
+            <div className="page">
+                <div className="apply-loading">
+                    <div className="apply-loading-icon">
+                        ...
+                    </div>
+                    <h2>Preparing application</h2>
+                    <p>Loading your available resumes...</p>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div>
-            <h1>Apply to Job</h1>
+        <div className="page">
 
-            <p>Job ID: {jobId}</p>
+            <div className="apply-topbar">
+                <button
+                    className="btn"
+                    onClick={() => navigate(-1)}
+                >
+                    ← Back
+                </button>
+            </div>
+
+            <div className="apply-header">
+
+                <div className="apply-header-icon">
+                    ↗
+                </div>
+
+                <div>
+                    <p className="page-eyebrow">
+                        JOB APPLICATION
+                    </p>
+
+                    <h1>Apply to Job</h1>
+
+                    <p>
+                        Submit your resume and application
+                        details for this position.
+                    </p>
+                </div>
+
+                <div className="apply-job-id">
+                    <span>Job ID</span>
+                    <strong>#{jobId}</strong>
+                </div>
+
+            </div>
 
             {resumes.length === 0 ? (
-                <div>
+                <section className="apply-empty-card">
+
+                    <div className="apply-empty-icon">
+                        📄
+                    </div>
+
+                    <h2>Resume required</h2>
+
                     <p>
-                        You don't have any resumes yet.
+                        You need to upload at least one resume
+                        before you can submit an application.
                     </p>
 
                     <button
+                        className="btn btn-primary"
                         onClick={() => navigate("/resumes")}
                     >
                         Upload Resume
                     </button>
-                </div>
+
+                </section>
             ) : (
-                <form onSubmit={handleApply}>
-                    <div>
-                        <label>
-                            Select Resume
-                        </label>
+                <div className="apply-layout">
 
-                        <select
-                            value={resumeId}
-                            onChange={(e) =>
-                                setResumeId(
-                                    e.target.value
-                                )
-                            }
-                        >
-                            <option value="">
-                                Select a resume
-                            </option>
+                    <main className="apply-main">
 
-                            {resumes.map((resume) => (
-                                <option
-                                    key={resume.id}
-                                    value={resume.id}
-                                >
-                                    {resume.fileName}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                        <section className="apply-card">
 
-                    <div>
-                        <label>
-                            Cover Letter
-                        </label>
+                            <div className="apply-card-header">
+                                <div>
+                                    <h2>Application Details</h2>
+                                    <p>
+                                        Complete the information
+                                        below before submitting.
+                                    </p>
+                                </div>
+                            </div>
 
-                        <textarea
-                            placeholder="Write your cover letter"
-                            value={coverLetter}
-                            onChange={(e) =>
-                                setCoverLetter(
-                                    e.target.value
-                                )
-                            }
-                        />
-                    </div>
+                            <form
+                                className="apply-form"
+                                onSubmit={handleApply}
+                            >
 
-                    <div>
-                        <label>
-                            Application Source
-                        </label>
+                                <div className="form-group">
+                                    <label>
+                                        Select Resume *
+                                    </label>
 
-                        <select
-                            value={source}
-                            onChange={(e) =>
-                                setSource(e.target.value)
-                            }
-                        >
-                            <option value="DIRECT">
-                                DIRECT
-                            </option>
+                                    <select
+                                        value={resumeId}
+                                        onChange={(e) =>
+                                            setResumeId(
+                                                e.target.value
+                                            )
+                                        }
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a resume
+                                        </option>
 
-                            <option value="LINKEDIN">
-                                LINKEDIN
-                            </option>
+                                        {resumes.map((resume) => (
+                                            <option
+                                                key={resume.id}
+                                                value={resume.id}
+                                            >
+                                                {resume.fileName}
+                                            </option>
+                                        ))}
+                                    </select>
 
-                            <option value="REFERRAL">
-                                REFERRAL
-                            </option>
+                                    <span className="apply-field-help">
+                                        Choose the resume you want
+                                        to submit with this application.
+                                    </span>
+                                </div>
 
-                            <option value="JOB_BOARD">
-                                JOB_BOARD
-                            </option>
+                                <div className="form-group">
+                                    <label>
+                                        Cover Letter
+                                    </label>
 
-                            <option value="COMPANY_WEBSITE">
-                                COMPANY_WEBSITE
-                            </option>
+                                    <textarea
+                                        className="apply-cover-letter"
+                                        placeholder="Tell the employer why you're a good fit for this role..."
+                                        value={coverLetter}
+                                        onChange={(e) =>
+                                            setCoverLetter(
+                                                e.target.value
+                                            )
+                                    }
+                                    />
 
-                            <option value="OTHER">
-                                OTHER
-                            </option>
-                        </select>
-                    </div>
+                                    <span className="apply-field-help">
+                                        A strong cover letter can help
+                                        provide additional context about
+                                        your application.
+                                    </span>
+                                </div>
 
-                    <button type="submit">
-                        Submit Application
-                    </button>
+                                <div className="form-group">
+                                    <label>
+                                        Application Source
+                                    </label>
 
-                    <button
-                        type="button"
-                        onClick={() => navigate(-1)}
-                    >
-                        Cancel
-                    </button>
-                </form>
+                                    <select
+                                        value={source}
+                                        onChange={(e) =>
+                                            setSource(
+                                                e.target.value
+                                            )
+                                        }
+                                    >
+                                        <option value="DIRECT">
+                                            Direct
+                                        </option>
+
+                                        <option value="LINKEDIN">
+                                            LinkedIn
+                                        </option>
+
+                                        <option value="REFERRAL">
+                                            Referral
+                                        </option>
+
+                                        <option value="JOB_BOARD">
+                                            Job Board
+                                        </option>
+
+                                        <option value="COMPANY_WEBSITE">
+                                            Company Website
+                                        </option>
+
+                                        <option value="OTHER">
+                                            Other
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div className="apply-actions">
+
+                                    <button
+                                        type="button"
+                                        className="btn"
+                                        onClick={() =>
+                                            navigate(-1)
+                                        }
+                                        disabled={submitting}
+                                    >
+                                        Cancel
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary"
+                                        disabled={submitting}
+                                    >
+                                        {submitting
+                                            ? "Submitting..."
+                                            : "Submit Application"}
+                                    </button>
+
+                                </div>
+
+                            </form>
+
+                        </section>
+
+                    </main>
+
+                    <aside className="apply-sidebar">
+
+                        <div className="apply-sidebar-card">
+
+                            <div className="apply-sidebar-icon">
+                                ✓
+                            </div>
+
+                            <h3>Before you submit</h3>
+
+                            <div className="apply-check-item">
+                                <span>✓</span>
+                                <p>
+                                    Select the most relevant resume
+                                    for this position.
+                                </p>
+                            </div>
+
+                            <div className="apply-check-item">
+                                <span>✓</span>
+                                <p>
+                                    Review your cover letter before
+                                    submitting.
+                                </p>
+                            </div>
+
+                            <div className="apply-check-item">
+                                <span>✓</span>
+                                <p>
+                                    Make sure your application details
+                                    are accurate.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div className="apply-sidebar-card apply-secure-card">
+
+                            <strong>
+                                Application #{jobId}
+                            </strong>
+
+                            <p>
+                                Your application will be submitted
+                                securely to the hiring system.
+                            </p>
+
+                        </div>
+
+                    </aside>
+
+                </div>
             )}
+
         </div>
     );
 }

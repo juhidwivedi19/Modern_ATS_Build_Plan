@@ -17,7 +17,7 @@ function ApplicationActivity() {
                     `/applications/${applicationId}/activity`
                 );
 
-                setActivities(response.data.data);
+                setActivities(response.data.data || []);
             } catch (error) {
                 console.error(
                     "Failed to fetch application activity:",
@@ -36,57 +36,168 @@ function ApplicationActivity() {
         fetchActivity();
     }, [applicationId]);
 
+    function getActivityTitle(activity) {
+        return (
+            activity.action ||
+            activity.type ||
+            "Application Activity"
+        );
+    }
+
+    function getActivityIcon(activity) {
+        const value = (
+            activity.action ||
+            activity.type ||
+            ""
+        ).toUpperCase();
+
+        if (value.includes("INTERVIEW")) return "📅";
+        if (value.includes("STATUS")) return "↔";
+        if (value.includes("OFFER")) return "🎯";
+        if (value.includes("HIRED")) return "✓";
+        if (value.includes("FEEDBACK")) return "💬";
+        if (value.includes("REJECT")) return "×";
+
+        return "•";
+    }
+
     if (loading) {
-        return <div>Loading activity...</div>;
+        return (
+            <div className="page">
+                <div className="activity-loading">
+                    Loading activity...
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div>
-            <button
-                onClick={() =>
-                    navigate(
-                        `/applications/${applicationId}`
-                    )
-                }
-            >
-                Back to Application
-            </button>
+        <div className="page">
 
-            <h1>Application Activity</h1>
+            <div className="activity-header">
+
+                <div>
+                    <button
+                        className="btn activity-back"
+                        onClick={() =>
+                            navigate(
+                                `/applications/${applicationId}`
+                            )
+                        }
+                    >
+                        ← Back to Application
+                    </button>
+
+                    <h1>Application Activity</h1>
+
+                    <p>
+                        Complete history of activity for this
+                        application.
+                    </p>
+                </div>
+
+                <div className="activity-count">
+                    <strong>{activities.length}</strong>
+                    <span>Events</span>
+                </div>
+
+            </div>
 
             {activities.length === 0 ? (
-                <p>No activity found.</p>
-            ) : (
-                <div>
-                    {activities.map((activity) => (
-                        <div key={activity.id}>
-                            <h3>
-                                {activity.action ||
-                                    activity.type ||
-                                    "Activity"}
-                            </h3>
+                <div className="activity-empty">
 
-                            {activity.description && (
-                                <p>{activity.description}</p>
-                            )}
+                    <div className="activity-empty-icon">
+                        ◷
+                    </div>
 
-                            {activity.message && (
-                                <p>{activity.message}</p>
-                            )}
+                    <h2>No activity yet</h2>
 
-                            <p>
-                                {activity.createdAt
-                                    ? new Date(
-                                          activity.createdAt
-                                      ).toLocaleString()
-                                    : ""}
-                            </p>
+                    <p>
+                        Activity related to this application will
+                        appear here.
+                    </p>
 
-                            <hr />
-                        </div>
-                    ))}
                 </div>
+            ) : (
+                <section className="activity-card">
+
+                    <div className="activity-card-header">
+                        <div>
+                            <h2>Activity Timeline</h2>
+                            <p>
+                                Latest application events and
+                                updates.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="activity-timeline">
+
+                        {activities.map((activity, index) => (
+                            <div
+                                className="activity-item"
+                                key={activity.id}
+                            >
+
+                                <div className="activity-marker">
+
+                                    <div className="activity-icon">
+                                        {getActivityIcon(activity)}
+                                    </div>
+
+                                    {index !==
+                                        activities.length - 1 && (
+                                        <div className="activity-line" />
+                                    )}
+
+                                </div>
+
+                                <div className="activity-content">
+
+                                    <div className="activity-content-top">
+
+                                        <div>
+                                            <h3>
+                                                {getActivityTitle(
+                                                    activity
+                                                )}
+                                            </h3>
+
+                                            {activity.description && (
+                                                <p>
+                                                    {
+                                                        activity.description
+                                                    }
+                                                </p>
+                                            )}
+
+                                            {activity.message && (
+                                                <p>
+                                                    {activity.message}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {activity.createdAt && (
+                                            <span className="activity-date">
+                                                {new Date(
+                                                    activity.createdAt
+                                                ).toLocaleString()}
+                                            </span>
+                                        )}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        ))}
+
+                    </div>
+
+                </section>
             )}
+
         </div>
     );
 }

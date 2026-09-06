@@ -6,6 +6,7 @@ function Resumes() {
     const [resumes, setResumes] = useState([]);
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchResumes();
@@ -15,7 +16,7 @@ function Resumes() {
         try {
             const response = await api.get("/resumes");
 
-            setResumes(response.data.data);
+            setResumes(response.data.data || []);
         } catch (error) {
             console.error(
                 "Failed to fetch resumes:",
@@ -26,6 +27,8 @@ function Resumes() {
                 error.response?.data?.message ||
                 "Failed to fetch resumes"
             );
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -38,7 +41,6 @@ function Resumes() {
         }
 
         const formData = new FormData();
-
         formData.append("resume", file);
 
         try {
@@ -58,7 +60,13 @@ function Resumes() {
 
             setFile(null);
 
-            // Refresh resume list
+            const fileInput =
+                document.getElementById("resume-upload");
+
+            if (fileInput) {
+                fileInput.value = "";
+            }
+
             await fetchResumes();
 
         } catch (error) {
@@ -111,7 +119,6 @@ function Resumes() {
 
             alert(`Resume status: ${status}`);
 
-            // Refresh list so displayed status is updated
             await fetchResumes();
 
         } catch (error) {
@@ -141,8 +148,8 @@ function Resumes() {
                 `/resumes/${resumeId}`
             );
 
-            setResumes(
-                resumes.filter(
+            setResumes((previous) =>
+                previous.filter(
                     (resume) => resume.id !== resumeId
                 )
             );
@@ -162,84 +169,283 @@ function Resumes() {
         }
     }
 
+    function getStatusClass(status) {
+        if (!status) {
+            return "resume-status";
+        }
+
+        return `resume-status resume-status-${status
+            .toLowerCase()
+            .replace(/_/g, "-")}`;
+    }
+
     return (
-        <div>
-            <h1>My Resumes</h1>
+        <div className="page">
 
-            <form onSubmit={handleUpload}>
-                <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) =>
-                        setFile(e.target.files[0])
-                    }
-                />
+            <div className="resumes-header">
 
-                <button
-                    type="submit"
-                    disabled={uploading}
-                >
-                    {uploading
-                        ? "Uploading..."
-                        : "Upload Resume"}
-                </button>
-            </form>
-
-            <h2>Uploaded Resumes</h2>
-
-            {resumes.length === 0 ? (
-                <p>No resumes uploaded yet.</p>
-            ) : (
                 <div>
-                    {resumes.map((resume) => (
-                        <div key={resume.id}>
-                            <h3>{resume.fileName}</h3>
+                    <p className="page-eyebrow">
+                        DOCUMENT MANAGEMENT
+                    </p>
 
-                            <p>
-                                Status:{" "}
-                                {resume.processingStatus}
-                            </p>
+                    <h1>My Resumes</h1>
 
-                            <p>
-                                Uploaded:{" "}
-                                {new Date(
-                                    resume.uploadedAt
-                                ).toLocaleDateString()}
-                            </p>
-
-                            <button
-                                onClick={() =>
-                                    handleDownload(
-                                        resume.id
-                                    )
-                                }
-                            >
-                                Download
-                            </button>
-
-                            <button
-                                onClick={() =>
-                                    handleCheckStatus(
-                                        resume.id
-                                    )
-                                }
-                            >
-                                Check Status
-                            </button>
-
-                            <button
-                                onClick={() =>
-                                    handleDelete(
-                                        resume.id
-                                    )
-                                }
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    ))}
+                    <p>
+                        Upload, manage and track your resume
+                        processing status.
+                    </p>
                 </div>
-            )}
+
+                <div className="resume-count">
+                    <strong>{resumes.length}</strong>
+                    <span>
+                        {resumes.length === 1
+                            ? "Resume"
+                            : "Resumes"}
+                    </span>
+                </div>
+
+            </div>
+
+            <section className="resume-upload-card">
+
+                <div className="resume-upload-info">
+
+                    <div className="resume-upload-icon">
+                        ↑
+                    </div>
+
+                    <div>
+                        <h2>Upload a Resume</h2>
+
+                        <p>
+                            Add a PDF or Word document to your
+                            resume library.
+                        </p>
+                    </div>
+
+                </div>
+
+                <form
+                    className="resume-upload-form"
+                    onSubmit={handleUpload}
+                >
+
+                    <label
+                        className={`resume-file-picker ${
+                            file ? "resume-file-selected" : ""
+                        }`}
+                        htmlFor="resume-upload"
+                    >
+                        <span className="resume-file-picker-icon">
+                            📄
+                        </span>
+
+                        <span className="resume-file-picker-text">
+                            <strong>
+                                {file
+                                    ? file.name
+                                    : "Choose a resume file"}
+                            </strong>
+
+                            <small>
+                                {file
+                                    ? `${(
+                                          file.size /
+                                          1024 /
+                                          1024
+                                      ).toFixed(2)} MB`
+                                    : "PDF, DOC or DOCX"}
+                            </small>
+                        </span>
+
+                        <span className="resume-file-picker-button">
+                            Browse
+                        </span>
+                    </label>
+
+                    <input
+                        id="resume-upload"
+                        className="resume-hidden-input"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) =>
+                            setFile(
+                                e.target.files?.[0] || null
+                            )
+                        }
+                    />
+
+                    <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={uploading || !file}
+                    >
+                        {uploading
+                            ? "Uploading..."
+                            : "Upload Resume"}
+                    </button>
+
+                </form>
+
+            </section>
+
+            <section className="resume-list-card">
+
+                <div className="resume-list-header">
+
+                    <div>
+                        <h2>Uploaded Resumes</h2>
+
+                        <p>
+                            Manage your stored resume documents.
+                        </p>
+                    </div>
+
+                </div>
+
+                {loading ? (
+                    <div className="resume-empty-state">
+                        <div className="resume-empty-icon">
+                            ...
+                        </div>
+
+                        <h3>Loading resumes</h3>
+
+                        <p>
+                            Fetching your resume library.
+                        </p>
+                    </div>
+                ) : resumes.length === 0 ? (
+                    <div className="resume-empty-state">
+
+                        <div className="resume-empty-icon">
+                            📄
+                        </div>
+
+                        <h3>No resumes uploaded yet</h3>
+
+                        <p>
+                            Upload your first resume above to
+                            start building your document library.
+                        </p>
+
+                    </div>
+                ) : (
+                    <div className="resume-table-wrapper">
+
+                        <table className="resume-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Resume</th>
+                                    <th>Status</th>
+                                    <th>Uploaded</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {resumes.map((resume) => (
+                                    <tr key={resume.id}>
+
+                                        <td>
+                                            <div className="resume-name-cell">
+
+                                                <div className="resume-row-icon">
+                                                    📄
+                                                </div>
+
+                                                <div>
+                                                    <strong>
+                                                        {resume.fileName ||
+                                                            "Untitled Resume"}
+                                                    </strong>
+
+                                                    <span>
+                                                        Resume #{resume.id}
+                                                    </span>
+                                                </div>
+
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <span
+                                                className={getStatusClass(
+                                                    resume.processingStatus
+                                                )}
+                                            >
+                                                <span className="resume-status-dot" />
+
+                                                {resume.processingStatus ||
+                                                    "UNKNOWN"}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <span className="resume-uploaded-date">
+                                                {resume.uploadedAt
+                                                    ? new Date(
+                                                          resume.uploadedAt
+                                                      ).toLocaleDateString()
+                                                    : "—"}
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <div className="resume-actions">
+
+                                                <button
+                                                    className="btn btn-small"
+                                                    onClick={() =>
+                                                        handleDownload(
+                                                            resume.id
+                                                        )
+                                                    }
+                                                >
+                                                    Download
+                                                </button>
+
+                                                <button
+                                                    className="btn btn-small"
+                                                    onClick={() =>
+                                                        handleCheckStatus(
+                                                            resume.id
+                                                        )
+                                                    }
+                                                >
+                                                    Status
+                                                </button>
+
+                                                <button
+                                                    className="btn btn-small btn-danger-outline"
+                                                    onClick={() =>
+                                                        handleDelete(
+                                                            resume.id
+                                                        )
+                                                    }
+                                                >
+                                                    Delete
+                                                </button>
+
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                ))}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+                )}
+
+            </section>
+
         </div>
     );
 }
