@@ -1,20 +1,24 @@
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 
 function Register() {
+    const navigate = useNavigate();
+    const { setUser } = useAuth();
+
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const { setUser } = useAuth();
-    const navigate = useNavigate();
-
-    const handleSubmit = async (e) => {
+    async function handleRegister(e) {
         e.preventDefault();
 
         try {
+            setLoading(true);
+
             const response = await api.post("/auth/register", {
                 name,
                 email,
@@ -22,54 +26,80 @@ function Register() {
             });
 
             setUser(response.data.user);
-
             navigate("/dashboard");
-
         } catch (error) {
             console.error("Registration failed:", error);
 
-            if (error.response) {
-                console.log("Server response:", error.response.data);
-            } else if (error.request) {
-                console.log("Server is not reachable");
-            } else {
-                console.log("Error:", error.message);
-            }
+            alert(
+                error.response?.data?.message ||
+                "Registration failed"
+            );
+        } finally {
+            setLoading(false);
         }
-    };
+    }
 
     return (
-        <div>
-            <h1>Register</h1>
+        <div className="auth-page">
+            <div className="auth-card">
+                <h1>Create Account</h1>
 
-            <form onSubmit={handleSubmit}>
+                <p className="auth-subtitle">
+                    Create your Modern ATS account
+                </p>
 
-                <input
-                    type="text"
-                    placeholder="Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />
+                <form onSubmit={handleRegister}>
+                    <div className="form-group">
+                        <label>Name</label>
 
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
+                        <input
+                            type="text"
+                            value={name}
+                            placeholder="Enter your name"
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                    </div>
 
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                    <div className="form-group">
+                        <label>Email</label>
 
-                <button type="submit">
-                    Register
-                </button>
+                        <input
+                            type="email"
+                            value={email}
+                            placeholder="Enter your email"
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
 
-            </form>
+                    <div className="form-group">
+                        <label>Password</label>
+
+                        <input
+                            type="password"
+                            value={password}
+                            placeholder="Create a password"
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                    >
+                        {loading ? "Creating Account..." : "Create Account"}
+                    </button>
+                </form>
+
+                <p className="auth-footer">
+                    Already have an account?{" "}
+                    <Link to="/login">
+                        Login
+                    </Link>
+                </p>
+            </div>
         </div>
     );
 }

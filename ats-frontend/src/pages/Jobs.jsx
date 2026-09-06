@@ -58,73 +58,137 @@ function Jobs() {
         }
     }
 
-    return (
-        <div>
-            <h1>Jobs</h1>
+   
+return (
+    <div className="page">
 
-            <button onClick={() => setShowForm(true)}>
-                Create Job
-            </button>
-
-            {showForm && (
-                <form onSubmit={handleCreateJob}>
-                    <input
-                        type="text"
-                        placeholder="Job title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                    />
-
-                    <textarea
-                        placeholder="Job description"
-                        value={description}
-                        onChange={(e) =>
-                            setDescription(e.target.value)
-                        }
-                    />
-
-                    <button type="submit">
-                        Create
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setShowForm(false);
-                            setTitle("");
-                            setDescription("");
-                        }}
-                    >
-                        Cancel
-                    </button>
-                </form>
-            )}
-
+        <div className="page-header">
             <div>
-                <h2>Job Listings</h2>
+                <h1>Jobs</h1>
+                <p>Manage your organization's open positions.</p>
+            </div>
 
-                {jobs.map((job) => (
-                    <div key={job.id}>
-                        <h3>{job.title}</h3>
+            <button
+                className="btn-primary"
+                onClick={() => setShowForm(true)}
+            >
+                + Create Job
+            </button>
+        </div>
 
-                        <p>{job.description}</p>
+        <div className="jobs-toolbar">
+            <div className="jobs-filters">
+                <input
+                    className="jobs-search"
+                    type="text"
+                    placeholder="Search jobs..."
+                />
 
-                        <p>Status: {job.status}</p>
-
-                        <button
-                            onClick={() =>
-                                navigate(
-                                    `/organizations/${organizationId}/jobs/${job.id}`
-                                )
-                            }
-                        >
-                            View Job
-                        </button>
-                    </div>
-                ))}
+                <select className="jobs-filter">
+                    <option value="">All Statuses</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="PUBLISHED">Published</option>
+                    <option value="ARCHIVED">Archived</option>
+                </select>
             </div>
         </div>
-    );
+
+        {showForm && (
+            <div className="section-card job-form">
+                <h2>Create Job</h2>
+
+                {/* Keep your existing create-job form fields here */}
+
+                <button
+                    className="btn"
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                >
+                    Cancel
+                </button>
+            </div>
+        )}
+
+        <div className="jobs-list">
+            {jobs.length === 0 ? (
+                <div className="job-empty">
+                    <h2>No jobs yet</h2>
+                    <p>
+                        Create your first job opening to start recruiting.
+                    </p>
+
+                    <button
+                        className="btn-primary"
+                        onClick={() => setShowForm(true)}
+                    >
+                        Create Job
+                    </button>
+                </div>
+            ) : (
+                jobs.map((job) => (
+                    <div className="job-card" key={job.id}>
+
+                        <div className="job-main">
+                            <h2 className="job-title">
+                                {job.title}
+                            </h2>
+
+                            <div className="job-meta">
+                                {job.location && (
+                                    <span>
+                                        📍 {job.location}
+                                    </span>
+                                )}
+
+                                {job.employmentType && (
+                                    <span>
+                                        💼 {job.employmentType}
+                                    </span>
+                                )}
+
+                                <span className="job-status">
+                                    {job.status}
+                                </span>
+
+                                <span className="job-count">
+                                    Applications:{" "}
+                                    {job._count?.applications || 0}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="job-actions">
+                            <button
+                                className="btn"
+                                onClick={() =>
+                                    navigate(
+                                        `/organizations/${organizationId}/jobs/${job.id}`
+                                    )
+                                }
+                            >
+                                View
+                            </button>
+
+                            <button
+                                className="btn-primary"
+                                onClick={() =>
+                                    navigate(
+                                        `/organizations/${organizationId}/jobs/${job.id}/applications`
+                                    )
+                                }
+                            >
+                                Applications
+                            </button>
+                        </div>
+
+                    </div>
+                ))
+            )}
+        </div>
+
+    </div>
+);
+
 }
 
 export default Jobs;

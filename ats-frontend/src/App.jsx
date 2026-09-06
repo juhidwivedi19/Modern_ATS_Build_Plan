@@ -20,8 +20,13 @@ import Applications from "./pages/Applications";
 import ApplyJob from "./pages/ApplyJob";
 import Resumes from "./pages/Resumes";
 import ApplicationDetails from "./pages/ApplicationDetails";
+import ApplicationActivity from "./pages/ApplicationActivity";
 import JobApplications from "./pages/JobApplications";
 import InterviewScheduling from "./pages/InterviewScheduling";
+import Interviews from "./pages/Interviews";
+import InterviewEvaluation from "./pages/InterviewEvaluation";
+import Notifications from "./pages/Notifications";
+import Analytics from "./pages/Analytics";
 
 
 function App() {
@@ -177,6 +182,42 @@ function App() {
     element={
         <ProtectedRoute>
             <InterviewScheduling />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
+    path="/interviews"
+    element={
+        <ProtectedRoute>
+            <Interviews />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
+    path="/interviews/:interviewId/evaluation"
+    element={
+        <ProtectedRoute>
+            <InterviewEvaluation />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
+    path="/notifications"
+    element={
+        <ProtectedRoute>
+            <Notifications />
+        </ProtectedRoute>
+    }
+/>
+
+<Route
+    path="/analytics"
+    element={
+        <ProtectedRoute>
+            <Analytics />
         </ProtectedRoute>
     }
 />

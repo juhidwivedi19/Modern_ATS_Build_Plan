@@ -47,59 +47,95 @@ function Organization() {
         }
     }
 
-    return (
-        <div>
-            <h1>Organizations</h1>
 
-            <button onClick={() => setShowForm(true)}>
-                Create Organization
+return (
+    <div className="page">
+        <div className="page-header">
+            <div>
+                <h1>Organizations</h1>
+                <p>Manage your organizations and teams.</p>
+            </div>
+
+            <button
+                className="btn-primary"
+                onClick={() => setShowForm(true)}
+            >
+                + Create Organization
             </button>
+        </div>
 
-            {showForm && (
+        {showForm && (
+            <div className="section-card">
+                <h2>Create Organization</h2>
+
                 <form onSubmit={handleCreateOrganization}>
-                    <input
-                        type="text"
-                        placeholder="Organization name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                    />
+                    <div className="form-group">
+                        <label>Organization Name</label>
 
-                    <button type="submit">
+                        <input
+                            type="text"
+                            placeholder="Enter organization name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="btn-primary"
+                    >
                         Create
                     </button>
 
                     <button
                         type="button"
+                        className="btn"
                         onClick={() => setShowForm(false)}
                     >
                         Cancel
                     </button>
                 </form>
-            )}
-
-            <div>
-                <h2>My Organizations</h2>
-
-                {organizations.map((organization) => (
-                    <div key={organization.id}>
-                        <h3>{organization.name}</h3>
-
-                        <p>
-                            Role: {organization.role}
-                        </p>
-
-                        <button
-                            onClick={() =>
-                                navigate(`/organizations/${organization.id}`)
-                            }
-                        >
-                            Open
-                        </button>
-                    </div>
-                ))}
             </div>
-        </div>
-    );
-}
+        )}
 
+        <div className="section-card">
+            <h2>My Organizations</h2>
+
+            {organizations.length === 0 ? (
+                <p>No organizations found.</p>
+            ) : (
+                <div className="organization-list">
+                    {organizations.map((organization) => (
+                        <div
+                            className="organization-card"
+                            key={organization.id}
+                        >
+                            <h2>{organization.name}</h2>
+
+                            <p>
+                                Role:{" "}
+                                <span className="role-badge">
+                                    {organization.role}
+                                </span>
+                            </p>
+
+                            <button
+                                className="btn-primary"
+                                onClick={() =>
+                                    navigate(
+                                        `/organizations/${organization.id}`
+                                    )
+                                }
+                            >
+                                Open Organization
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    </div>
+);
+}
 export default Organization;

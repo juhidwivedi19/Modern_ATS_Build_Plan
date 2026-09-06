@@ -10,20 +10,20 @@ function Navbar() {
     async function handleLogout() {
         try {
             await api.post("/auth/logout");
-
             setUser(null);
             navigate("/login");
-
         } catch (error) {
             console.error("Logout failed:", error);
         }
     }
 
     return (
-        <nav>
-            <h2>Modern ATS</h2>
+        <nav className="navbar">
+            <Link to="/" className="navbar-logo">
+                Modern ATS
+            </Link>
 
-            <div>
+            <div className="navbar-links">
                 <Link to="/">Home</Link>
 
                 {!user && (
@@ -36,10 +36,15 @@ function Navbar() {
                 {user && (
                     <>
                         <Link to="/dashboard">Dashboard</Link>
-
                         <Link to="/resumes">Resumes</Link>
+                        <Link to="/interviews">Interviews</Link>
+                        <Link to="/notifications">Notifications</Link>
+                        <Link to="/analytics">Analytics</Link>
 
-                        <button onClick={handleLogout}>
+                        <button
+                            className="navbar-logout"
+                            onClick={handleLogout}
+                        >
                             Logout
                         </button>
                     </>
@@ -50,4 +55,3 @@ function Navbar() {
 }
 
 export default Navbar;
-
