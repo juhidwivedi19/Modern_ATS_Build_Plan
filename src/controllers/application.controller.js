@@ -602,25 +602,17 @@ async function moveApplicationController(req, res) {
 
 
         // 6. Move application
-        const application =
-            await moveApplication(
-                applicationId,
-                status,
-                req.user.id
-            );
-
-     await invalidateAnalyticsCache(
-        application.job.organizationId
+      const application = await moveApplication(
+    applicationId,
+    status,
+    req.user.id
 );
 
-
-        // 7. Return updated application
-        return res.status(200).json({
-            message: "Application moved successfully",
-            status: "success",
-            data: application
-        });
-
+return res.status(200).json({
+    message: "Application moved successfully",
+    status: "success",
+    data: application
+});
 
     } catch (error) {
 

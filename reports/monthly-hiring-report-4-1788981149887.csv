@@ -1,0 +1,10 @@
+reportType,section,jobId,title,value
+"MONTHLY","Applications Per Job","","Frontend Developer",""
+"MONTHLY","Applications Per Job","","External Backend Developer",""
+"MONTHLY","Applications Per Job","","Senior Backend Developer",""
+"MONTHLY","Hiring Funnel","","APPLIED",""
+"MONTHLY","Hiring Funnel","","TECHNICAL_INTERVIEW",""
+"MONTHLY","Candidate Sources","","DIRECT","1"
+"MONTHLY","Candidate Sources","","COMPANY_WEBSITE","1"
+"MONTHLY","Open Positions","4","External Backend Developer","1"
+"MONTHLY","Open Positions","3","Frontend Developer","1"

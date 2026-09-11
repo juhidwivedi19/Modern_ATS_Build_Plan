@@ -1,4 +1,5 @@
 const { createApiKey } = require("../services/apiKey.service.js");
+const prisma = require("../config/db.config.js");
 
 async function createApiKeyController(req, res) {
     try {
@@ -11,9 +12,13 @@ async function createApiKeyController(req, res) {
             });
         }
 
-        const organizationId = req.user.organizationId;
+        const membership = await prisma.organizationMember.findFirst({
+            where: {
+                userId: req.user.id,
+            },
+        });
 
-        if (!organizationId) {
+        if (!membership) {
             return res.status(400).json({
                 message: "Organization is required",
                 status: "failed",
@@ -21,7 +26,7 @@ async function createApiKeyController(req, res) {
         }
 
         const apiKey = await createApiKey({
-            organizationId,
+            organizationId: membership.organizationId,
             name,
             expiresAt,
         });
@@ -44,4 +49,4 @@ async function createApiKeyController(req, res) {
 
 module.exports = {
     createApiKeyController,
-};  
+};

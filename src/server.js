@@ -5,8 +5,8 @@ require("dotenv").config();
 require("./workers/email.worker.js");
 require("./workers/interviewReminder.worker.js");
 require("./workers/report.worker.js");
+require("./workers/resume.worker.js");
 require("./schedulers/report.schedular.js");
-
 
 require("./config/db.config");
 require("./config/redis.config");

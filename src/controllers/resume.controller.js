@@ -77,7 +77,14 @@ const resume = await prisma.resume.create({
         candidateId: candidate.id,
         fileName: req.file.originalname,
         fileKey: fileKey,
-        fileType: req.file.mimetype,
+       fileType:
+    req.file.mimetype === "application/octet-stream"
+        ? req.file.originalname.toLowerCase().endsWith(".pdf")
+            ? "application/pdf"
+            : req.file.originalname.toLowerCase().endsWith(".docx")
+                ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                : "application/msword"
+        : req.file.mimetype,
         fileSize: req.file.size
     }
 });

@@ -1,145 +1,186 @@
-import { useParams, useNavigate,Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import api from "../api/axios";
 
 function OrganizationDetails() {
     const { organizationId } = useParams();
     const navigate = useNavigate();
 
-  return (
-    <div className="page">
+    const [organization, setOrganization] = useState(null);
 
-        <div className="organization-hero">
-            <div className="organization-identity">
-                <div className="organization-avatar">
-                    {organization.name?.charAt(0).toUpperCase()}
+    useEffect(() => {
+        async function fetchOrganization() {
+            try {
+                const response = await api.get(
+                    `/organization/${organizationId}`
+                );
+
+                setOrganization(
+                    response.data.organization || response.data
+                );
+            } catch (error) {
+                console.error("Failed to fetch organization:", error);
+            }
+        }
+
+        fetchOrganization();
+    }, [organizationId]);
+
+    if (!organization) {
+        return (
+            <div className="page">
+                <p>Loading organization...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="page">
+
+            <div className="organization-hero">
+                <div className="organization-identity">
+
+                    <div className="organization-avatar">
+                        {organization.name?.charAt(0).toUpperCase()}
+                    </div>
+
+                    <div>
+                        <h1>{organization.name}</h1>
+                        <p>Organization workspace</p>
+                    </div>
+
                 </div>
 
-                <div>
-                    <h1>{organization.name}</h1>
-                    <p>Organization workspace</p>
+                <div className="organization-actions">
+
+                    <button
+                        className="btn"
+                        onClick={() =>
+                            navigate(
+                                `/organizations/${organization.id}/members`
+                            )
+                        }
+                    >
+                        Members
+                    </button>
+
+                    <button
+                        className="btn"
+                        onClick={() =>
+                            navigate(
+                                `/organizations/${organization.id}/departments`
+                            )
+                        }
+                    >
+                        Departments
+                    </button>
+
+                    <button
+                        className="btn-primary"
+                        onClick={() =>
+                            navigate(
+                                `/organizations/${organization.id}/jobs`
+                            )
+                        }
+                    >
+                        Jobs
+                    </button>
+
                 </div>
             </div>
 
-            <div className="organization-actions">
-                <button
-                    className="btn"
-                    onClick={() =>
-                        navigate(
-                            `/organizations/${organization.id}/members`
-                        )
-                    }
+            <div className="organization-tabs">
+
+                <Link
+                    className="organization-tab active"
+                    to={`/organizations/${organization.id}`}
+                >
+                    Overview
+                </Link>
+
+                <Link
+                    className="organization-tab"
+                    to={`/organizations/${organization.id}/members`}
                 >
                     Members
-                </button>
+                </Link>
 
-                <button
-                    className="btn"
-                    onClick={() =>
-                        navigate(
-                            `/organizations/${organization.id}/departments`
-                        )
-                    }
+                <Link
+                    className="organization-tab"
+                    to={`/organizations/${organization.id}/departments`}
                 >
                     Departments
-                </button>
+                </Link>
 
-                <button
-                    className="btn-primary"
-                    onClick={() =>
-                        navigate(
-                            `/organizations/${organization.id}/jobs`
-                        )
-                    }
+                <Link
+                    className="organization-tab"
+                    to={`/organizations/${organization.id}/jobs`}
                 >
                     Jobs
-                </button>
+                </Link>
+
             </div>
-        </div>
 
-        <div className="organization-tabs">
-            <Link
-                className="organization-tab active"
-                to={`/organizations/${organization.id}`}
-            >
-                Overview
-            </Link>
+            <div className="organization-overview">
 
-            <Link
-                className="organization-tab"
-                to={`/organizations/${organization.id}/members`}
-            >
-                Members
-            </Link>
+                <div className="organization-panel">
 
-            <Link
-                className="organization-tab"
-                to={`/organizations/${organization.id}/departments`}
-            >
-                Departments
-            </Link>
+                    <h2>Organization Overview</h2>
 
-            <Link
-                className="organization-tab"
-                to={`/organizations/${organization.id}/jobs`}
-            >
-                Jobs
-            </Link>
-        </div>
+                    <div className="organization-stat">
+                        <span className="organization-stat-label">
+                            Organization
+                        </span>
 
-        <div className="organization-overview">
+                        <span className="organization-stat-value">
+                            {organization.name}
+                        </span>
+                    </div>
 
-            <div className="organization-panel">
-                <h2>Organization Overview</h2>
+                    <div className="organization-stat">
+                        <span className="organization-stat-label">
+                            Your Role
+                        </span>
 
-                <div className="organization-stat">
-                    <span className="organization-stat-label">
-                        Organization
-                    </span>
+                        <span className="role-badge">
+                            {organization.role || "Member"}
+                        </span>
+                    </div>
 
-                    <span className="organization-stat-value">
-                        {organization.name}
-                    </span>
                 </div>
 
-                <div className="organization-stat">
-                    <span className="organization-stat-label">
-                        Your Role
-                    </span>
+                <div className="organization-panel">
 
-                    <span className="role-badge">
-                        {organization.role || "Member"}
-                    </span>
+                    <h2>Quick Actions</h2>
+
+                    <button
+                        className="btn-primary"
+                        onClick={() =>
+                            navigate(
+                                `/organizations/${organization.id}/jobs`
+                            )
+                        }
+                    >
+                        Manage Jobs
+                    </button>
+
+                    <button
+                        className="btn"
+                        onClick={() =>
+                            navigate(
+                                `/organizations/${organization.id}/members`
+                            )
+                        }
+                    >
+                        Manage Members
+                    </button>
+
                 </div>
-            </div>
 
-            <div className="organization-panel">
-                <h2>Quick Actions</h2>
-
-                <button
-                    className="btn-primary"
-                    onClick={() =>
-                        navigate(
-                            `/organizations/${organization.id}/jobs`
-                        )
-                    }
-                >
-                    Manage Jobs
-                </button>
-
-                <button
-                    className="btn"
-                    onClick={() =>
-                        navigate(
-                            `/organizations/${organization.id}/members`
-                        )
-                    }
-                >
-                    Manage Members
-                </button>
             </div>
 
         </div>
-    </div>
-);
+    );
 }
 
 export default OrganizationDetails;

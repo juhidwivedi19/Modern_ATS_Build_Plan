@@ -1,6 +1,5 @@
 const { Worker } = require("bullmq");
-const {sendApplicationStageEmail} = require("../services/email.service.js");
-
+const { sendApplicationStageEmail } = require("../services/email.service.js");
 
 // =============================================================
 // Email Worker
@@ -12,13 +11,23 @@ const emailWorker = new Worker(
     async (job) => {
 
         console.log("Email job received");
-
         console.log("Job data:", job.data);
 
+        const {
+            to,
+            candidateName,
+            jobTitle,
+            status,
+            message
+        } = job.data;
 
-        // Email sending will be added here
-        // after we connect Nodemailer.
-
+        await sendApplicationStageEmail(
+            to,
+            candidateName,
+            jobTitle,
+            status,
+            message
+        );
 
         return {
             success: true
@@ -33,7 +42,6 @@ const emailWorker = new Worker(
     }
 );
 
-
 // =============================================================
 // Worker Events
 // =============================================================
@@ -46,7 +54,6 @@ emailWorker.on("completed", (job) => {
 
 });
 
-
 emailWorker.on("failed", (job, error) => {
 
     console.error(
@@ -55,6 +62,5 @@ emailWorker.on("failed", (job, error) => {
     );
 
 });
-
 
 module.exports = emailWorker;

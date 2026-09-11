@@ -55,7 +55,7 @@ function Members() {
 
     async function handleChangeRole(memberId, role) {
         try {
-            await api.put(
+            await api.patch(
                 `/organization/${organizationId}/members/${memberId}/role`,
                 {
                     role: role

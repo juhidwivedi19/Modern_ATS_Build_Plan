@@ -47,20 +47,35 @@ async function createExternalJobController(req, res) {
         }
 
         // Create job
-        const job = await prisma.job.create({
-            data: {
-                title,
-                description,
-                location,
-                salary: salary ? parseFloat(salary) : null,
-                employmentType,
-                requiredSkills: requiredSkills || null,
-                experience: experience
-                    ? parseInt(experience)
-                    : null,
-                organizationId,
-                departmentId: parseInt(departmentId)
-            },
+       // Find organization owner to use as job creator
+const owner = await prisma.organizationMember.findFirst({
+    where: {
+        organizationId,
+        role: "OWNER"
+    }
+});
+
+if (!owner) {
+    return res.status(400).json({
+        message: "Organization owner not found",
+        status: "failed"
+    });
+}
+
+// Create job
+const job = await prisma.job.create({
+    data: {
+        title,
+        description,
+        location,
+        salary: salary ? parseFloat(salary) : null,
+        employmentType,
+        requiredSkills: requiredSkills || null,
+        experience: experience ? parseInt(experience) : null,
+        organizationId,
+        departmentId: parseInt(departmentId),
+        createdById: owner.userId
+    },
             include: {
                 department: true,
                 organization: true

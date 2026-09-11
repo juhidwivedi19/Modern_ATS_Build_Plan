@@ -14,7 +14,11 @@ function Organization() {
             try {
                 const response = await api.get("/organization");
 
-                setOrganizations(response.data.organizations);
+              setOrganizations(
+    Array.isArray(response.data)
+        ? response.data
+        : response.data.organizations || []
+);
             } catch (error) {
                 console.error("Failed to fetch organizations:", error);
             }

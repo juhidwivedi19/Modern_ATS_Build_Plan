@@ -137,39 +137,42 @@ async function getAllInterviewsController(req, res) {
 //=======================
 //Update interview
 //========================
-async function updateInterviewController(req,res){
-  try{
+async function updateInterviewController(req, res) {
+  try {
+    const { interviewId } = req.params;
 
-      const {interviewId} = req.params;
+    const {
+      type,
+      scheduledAt,
+      duration,
+      meetingLink,
+    } = req.body;
 
-      const{
+    const interview = await interviewService.updateInterview(
+      Number(interviewId),
+      {
         type,
         scheduledAt,
         duration,
         meetingLink,
-      } = req.body;
-
-      const interview = await interviewService.updateInterview({
-        interviewId: Number(interviewId),
-        type,
-        scheduledAt,
-        duration,
-        meetingLink
-      })
+      }
+    );
 
     return res.status(200).json({
-      message:"Interview updated successfully",
-     status:"Success",
-     interview
+      message: "Interview updated successfully",
+      status: "success",
+      interview,
     });
-  }catch(error){
+
+  } catch (error) {
+    console.error("UPDATE INTERVIEW ERROR:", error);
+
     return res.status(400).json({
-      message:"Internal server error",
-      status:"failed"
-    })
+      message: error.message,
+      status: "failed",
+    });
   }
 }
-
 
 //========================
 //cancel Interview

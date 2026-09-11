@@ -15,12 +15,12 @@ const GOOGLE_CALENDAR_SCOPES = [
 async function getGoogleAuthUrl(userId) {
     const state = await generateOAuthState(userId);
 
-    return oauth2Client.generateAuthUrl({
-        access_type: "offline",
-        scope: GOOGLE_SCOPES,
-        state,
-        prompt: "consent",
-    });
+ return googleOAuth2Client.generateAuthUrl({
+    access_type: "offline",
+    scope: GOOGLE_CALENDAR_SCOPES,
+    state,
+    prompt: "consent",
+});
 }
 
 
@@ -241,14 +241,15 @@ async function addCalendarAttendee({
         email: attendeeEmail,
     });
 
-    const updatedEvent = await calendar.events.update({
-        calendarId: "primary",
-        eventId: googleEventId,
-        requestBody: {
-            attendees,
-        },
-        sendUpdates: "all",
-    });
+   const updatedEvent = await calendar.events.update({
+    calendarId: "primary",
+    eventId: googleEventId,
+    requestBody: {
+        ...event,
+        attendees,
+    },
+    sendUpdates: "all",
+});
 
     return updatedEvent.data;
 }
@@ -296,8 +297,9 @@ async function removeCalendarAttendee({
         calendarId: "primary",
         eventId: googleEventId,
         requestBody: {
-            attendees: updatedAttendees,
-        },
+    ...event,
+    attendees: updatedAttendees,
+},
         sendUpdates: "all",
     });
 
@@ -505,5 +507,5 @@ module.exports = {
     getCalendarConnectionStatus,
     disconnectGoogleCalendar,
     generateOAuthState,
-    generateOAuthState
+    verifyOAuthState,
 };

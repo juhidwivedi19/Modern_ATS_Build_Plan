@@ -365,12 +365,24 @@ async function getInterviewById(interviewId) {
           job: true,
         },
       },
-      createdBy: true,
-      interviewers: {
-        include: {
-          user: true,
-        },
-      },
+     createdBy: {
+    select: {
+        id: true,
+        email: true,
+        name: true
+    }
+},
+interviewers: {
+    include: {
+        user: {
+            select: {
+                id: true,
+                email: true,
+                name: true
+            }
+        }
+    }
+}
     },
   });
 
@@ -397,10 +409,22 @@ async function getAllInterviews() {
           job: true,
         },
       },
-      createdBy: true,
+      createdBy: {
+    select: {
+        id: true,
+        email: true,
+        name: true
+    }
+},
       interviewers: {
         include: {
-          user: true,
+          user: {
+    select: {
+        id: true,
+        email: true,
+        name: true
+    }
+},
         },
       },
     },
@@ -487,7 +511,7 @@ async function updateInterview(interviewId, data) {
 
     // 5. Update Google Calendar event
     if (interview.googleEventId) {
-
+try{
         await googleCalendarService.updateCalendarEvent({
             userId: interview.createdById,
 
@@ -508,6 +532,11 @@ async function updateInterview(interviewId, data) {
                     ? data.meetingLink
                     : interview.meetingLink,
         });
+    }
+    catch (error) {
+    console.error("GOOGLE CALENDAR UPDATE ERROR:", error);
+    throw error;
+}
     }
 
     // 6. Reschedule BullMQ reminders

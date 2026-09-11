@@ -34,12 +34,15 @@ router.get(
 
 router.patch(
     "/applications/:applicationId/status",
+    authMiddleware,
     moveApplicationController
 );
 
 router.get(
     "/applications/:applicationId/activity",
+    authMiddleware,
     getApplicationActivityController
 );
+
 
 module.exports=router;

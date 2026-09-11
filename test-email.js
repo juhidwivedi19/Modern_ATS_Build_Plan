@@ -1,20 +1,21 @@
-const { PrismaClient } = require("@prisma/client");
+require("dotenv").config();
 
-const prisma = new PrismaClient();
+const { sendApplicationStageEmail } = require("./src/services/email.service.js");
 
-async function makeOwner() {
-    await prisma.organizationMember.update({
-        where: {
-            id: 3
-        },
-        data: {
-            role: "OWNER"
-        }
-    });
+async function testEmail() {
+    try {
+        await sendApplicationStageEmail(
+            process.env.EMAIL_USER,
+            "Test Candidate",
+            "Frontend Developer",
+            "OFFER",
+            "This is a test email from the ATS project."
+        );
 
-    console.log("User is now OWNER");
+        console.log("TEST EMAIL SENT SUCCESSFULLY");
+    } catch (error) {
+        console.error("TEST EMAIL FAILED:", error.message);
+    }
 }
 
-makeOwner()
-    .catch(console.error)
-    .finally(() => prisma.$disconnect());
+testEmail();

@@ -158,10 +158,12 @@ const {
             });
         }   
 
-    return res.status(201).json({
-        message:"Jobs fetched successfully",
-        status:"Success"
-    })
+return res.status(200).json({
+    message: "Jobs fetched successfully",
+    status: "success",
+    jobs: jobs
+});
+
     }catch(error){
         console.error("Error fetching jobs",error);
         return res.status(400).json({

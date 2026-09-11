@@ -17,6 +17,7 @@ const candidateSearchRoutes = require("./routes/candidateSearch.routes.js");
 const analyticsRoutes = require("./routes/analytics.routes.js");
 const apiKeyRoutes = require("./routes/apiKey.routes.js");
 const externalApiRoutes = require("./routes/externalApi.routes.js");
+const jobRouter = require("./routes/job.routes.js");
 
 app.use(
     cors({
@@ -41,5 +42,6 @@ app.use("/api/candidates", candidateSearchRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/api-keys", apiKeyRoutes);
 app.use("/api/external", externalApiRoutes);
+app.use("/api", jobRouter);
 
 module.exports = app;

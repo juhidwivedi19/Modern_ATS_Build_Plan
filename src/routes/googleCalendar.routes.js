@@ -16,8 +16,7 @@ router.get(
 );
 
 router.get(
-    "/oauth/callback",
-    authMiddleware,
+    "/oauth2callback",
     googleCalendarCallbackController
 );
 
